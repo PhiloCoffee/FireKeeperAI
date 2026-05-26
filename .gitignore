@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Node / web app
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# Fire Keeper local runtime data
+data/
