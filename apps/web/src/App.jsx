@@ -8,6 +8,7 @@ import {
   Plus,
   ScrollText,
   ShieldAlert,
+  Sparkles,
   Swords,
   Trash2,
   X
@@ -21,8 +22,14 @@ import {
   streamChat,
   updateTask
 } from "./api/client.js";
-import fireKeeperArt from "./assets/char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg";
-import bonfireBanner from "./assets/object/bonfire/bg-bonfire-ruins-cropped-banner.jpg";
+import {
+  getMediaById,
+  getModeById,
+  getNextModeId,
+  getPersonaById,
+  INTERACTION_MODES,
+  PERSONA_TEMPLATES
+} from "./personaTemplates.js";
 import {
   CLASS_OPTIONS,
   STATUS_LABELS,
@@ -38,6 +45,8 @@ import {
 export function App() {
   const [health, setHealth] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [selectedPersonaId, setSelectedPersonaId] = useState("fire-keeper");
+  const [selectedModeId, setSelectedModeId] = useState("ledger");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [taskDraft, setTaskDraft] = useState({ title: "", class: "regular" });
@@ -55,6 +64,10 @@ export function App() {
   const [isChatting, setIsChatting] = useState(false);
   const [notice, setNotice] = useState("");
 
+  const activePersona = useMemo(() => getPersonaById(selectedPersonaId), [selectedPersonaId]);
+  const activeMode = useMemo(() => getModeById(selectedModeId), [selectedModeId]);
+  const activeMedia = useMemo(() => getMediaById(activePersona.mediaId), [activePersona]);
+
   async function refreshTasks() {
     const result = await getTasks();
     setTasks(result.tasks);
@@ -63,6 +76,28 @@ export function App() {
   useEffect(() => {
     getHealth().then(setHealth).catch((error) => setNotice(error.message));
     refreshTasks().catch((error) => setNotice(error.message));
+  }, []);
+
+  useEffect(() => {
+    setMessages([
+      {
+        role: "assistant",
+        content: `${activePersona.intro.en}\n\n${activePersona.intro.zh}`
+      }
+    ]);
+    setConversationId(null);
+  }, [activePersona]);
+
+  useEffect(() => {
+    function handleShortcut(event) {
+      if (event.key === "Tab" && event.ctrlKey) {
+        event.preventDefault();
+        setSelectedModeId((current) => getNextModeId(current, event.shiftKey ? -1 : 1));
+      }
+    }
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
   const visibleTasks = useMemo(() => {
@@ -198,7 +233,13 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main
+      className={`app-shell persona-${activePersona.id} mode-${activeMode.id}`}
+      style={{
+        "--persona-scene": `url(${activePersona.scene})`,
+        "--persona-accent": activePersona.accent
+      }}
+    >
       <aside className="side-rail" aria-label="Fire Keeper navigation">
         <div className="brand-mark" title="Fire Keeper AI">
           <Flame size={26} />
@@ -217,8 +258,9 @@ export function App() {
       <section className="task-pane">
         <header className="pane-header">
           <div>
-            <p className="eyebrow">Fire Keeper AI</p>
-            <h1>Bonfire Ledger</h1>
+            <p className="eyebrow">Fire Keeper AI / 模板化角色</p>
+            <h1>{activePersona.nameZh}</h1>
+            <p className="persona-subtitle">{activePersona.name} · {activeMode.labelZh}</p>
           </div>
           <div className="kindled-count">
             <Flame size={18} />
@@ -226,15 +268,45 @@ export function App() {
           </div>
         </header>
 
+        <section className="persona-switcher" aria-label="Character templates">
+          {PERSONA_TEMPLATES.map((persona) => (
+            <button
+              key={persona.id}
+              className={persona.id === activePersona.id ? "selected" : ""}
+              onClick={() => setSelectedPersonaId(persona.id)}
+              style={{ "--swatch": persona.accent }}
+              title={`${persona.name} / ${persona.nameZh}`}
+            >
+              <span>{persona.mark}</span>
+              <strong>{persona.nameZh}</strong>
+              <small>{persona.name}</small>
+            </button>
+          ))}
+        </section>
+
+        <section className="mode-tabs" aria-label="Interaction modes">
+          {INTERACTION_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              className={mode.id === activeMode.id ? "selected" : ""}
+              onClick={() => setSelectedModeId(mode.id)}
+              title={`${mode.hint} / ${mode.hintZh}`}
+            >
+              <span>{mode.labelZh}</span>
+              <small>{mode.label}</small>
+            </button>
+          ))}
+        </section>
+
         <figure className="bonfire-banner" aria-label="Bonfire rest point">
-          <img src={bonfireBanner} alt="" />
+          <img src={activePersona.banner} alt="" />
         </figure>
 
         <form className="quick-capture" onSubmit={handleAddTask}>
           <input
             value={taskDraft.title}
             onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
-            placeholder="Capture a task"
+            placeholder={`${activePersona.capturePlaceholder} / ${activePersona.capturePlaceholderZh}`}
             aria-label="Task title"
           />
           <select
@@ -281,6 +353,23 @@ export function App() {
           ))}
         </nav>
 
+        {activeMode.id === "ritual" ? (
+          <section className="ritual-panel" aria-label="Role working template">
+            <div>
+              <p className="eyebrow">Interactive Template / 交互模板</p>
+              <h2>{activePersona.nameZh}的三步仪式</h2>
+            </div>
+            <ol>
+              {activePersona.ritual.map(([en, zh]) => (
+                <li key={en}>
+                  <span>{zh}</span>
+                  <small>{en}</small>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
         <div className="task-list">
           {visibleTasks.length === 0 ? (
             <div className="empty-state">
@@ -313,24 +402,52 @@ export function App() {
           <span />
           <span />
         </div>
-        <div className="fire-keeper-portrait" aria-hidden="true">
-          <img src={fireKeeperArt} alt="" />
-        </div>
+        {activePersona.portrait ? (
+          <div className="fire-keeper-portrait" aria-hidden="true">
+            <img src={activePersona.portrait} alt="" />
+          </div>
+        ) : (
+          <div className="persona-sigil" aria-hidden="true">
+            {activePersona.mark}
+          </div>
+        )}
 
         <header className="pane-header chat-header">
           <div>
-            <p className="eyebrow">Claude API</p>
-            <h2>Guidance</h2>
+            <p className="eyebrow">Claude API · {activeMode.label} / {activeMode.labelZh}</p>
+            <h2>{activePersona.name}</h2>
+            <p className="persona-copy">{activePersona.intro.zh}</p>
           </div>
           <div className={health?.claudeConfigured ? "status-pill ready" : "status-pill"}>
             {health?.claudeConfigured ? "Claude ready" : "API key needed"}
           </div>
         </header>
 
+        {activeMode.id === "archive" ? (
+          <section className="media-panel" aria-label="Official media references">
+            <div>
+              <p className="eyebrow">Official Reference / 官方参考</p>
+              <h2>{activeMedia.titleZh}</h2>
+              <p>{activePersona.officialReferenceZh}</p>
+            </div>
+            <div className="media-card">
+              <img src={activeMedia.localPoster || activeMedia.thumbnail} alt="" />
+              <a href={activeMedia.sourcePage} target="_blank" rel="noreferrer">
+                <Sparkles size={16} />
+                Steam source
+              </a>
+              <a href={activeMedia.localHls || activeMedia.hls} target="_blank" rel="noreferrer">
+                <ScrollText size={16} />
+                HLS manifest
+              </a>
+            </div>
+          </section>
+        ) : null}
+
         <div className="message-stack" aria-live="polite">
           {messages.map((message, index) => (
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-              <span>{message.role === "assistant" ? "Fire Keeper" : "You"}</span>
+              <span>{message.role === "assistant" ? activePersona.nameZh : "You"}</span>
               <p>{message.content || (isChatting ? "..." : "")}</p>
             </article>
           ))}
@@ -342,7 +459,7 @@ export function App() {
           <textarea
             value={chatDraft}
             onChange={(event) => setChatDraft(event.target.value)}
-            placeholder="Ask Claude to break down a task, choose priorities, or plan the next rest."
+            placeholder={`${activePersona.chatPlaceholder} / ${activePersona.chatPlaceholderZh}`}
             aria-label="Chat message"
             rows={3}
           />

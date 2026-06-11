@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 import {
   countTasks,
@@ -8,6 +10,14 @@ import {
   removeTask,
   replaceTask
 } from "../src/taskLogic.js";
+import {
+  getMediaById,
+  getModeById,
+  getNextModeId,
+  getPersonaDefinitionById,
+  INTERACTION_MODES,
+  PERSONA_TEMPLATE_DEFINITIONS
+} from "../src/personaTemplateData.js";
 
 const tasks = [
   { id: "1", title: "Finish release", class: "boss", status: "active" },
@@ -58,4 +68,51 @@ test("replaceTask and removeTask keep list updates scoped by id", () => {
 
   assert.deepEqual(replaceTask(tasks, replacement), [tasks[0], replacement, tasks[2], tasks[3]]);
   assert.deepEqual(removeTask(tasks, "2"), [tasks[0], tasks[2], tasks[3]]);
+});
+
+test("persona templates expose bilingual role blocks", () => {
+  assert.equal(PERSONA_TEMPLATE_DEFINITIONS.length >= 4, true);
+
+  const solaire = getPersonaDefinitionById("solaire");
+  assert.equal(solaire.nameZh, "阿斯特拉的索拉尔");
+  assert.equal(solaire.ritual.length, 3);
+  assert.equal(Boolean(solaire.intro.en && solaire.intro.zh), true);
+
+  assert.equal(getPersonaDefinitionById("missing").id, "fire-keeper");
+});
+
+test("interaction modes cycle forward and backward for Ctrl+Tab", () => {
+  assert.equal(INTERACTION_MODES[0].id, "ledger");
+  assert.equal(getModeById("ritual").labelZh, "仪式");
+  assert.equal(getModeById("missing").id, "ledger");
+  assert.equal(getNextModeId("ledger"), "guidance");
+  assert.equal(getNextModeId("ledger", -1), "archive");
+});
+
+test("official media references are available by template id", () => {
+  const fireKeeper = getPersonaDefinitionById("fire-keeper");
+  const media = getMediaById(fireKeeper.mediaId);
+
+  assert.match(media.sourcePage, /^https:\/\/store\.steampowered\.com\//);
+  assert.match(media.hls, /^https:\/\/video\.akamai\.steamstatic\.com\//);
+  assert.equal(Boolean(media.localPosterKey), true);
+  assert.equal(Boolean(media.localHlsKey), true);
+});
+
+test("official video manifest points to downloaded local assets", () => {
+  const manifestPath = resolve("src/assets/manifests/steam-official-video-manifest.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+
+  assert.equal(manifest.length >= 3, true);
+
+  for (const item of manifest) {
+    assert.match(item.sourcePage, /^https:\/\/store\.steampowered\.com\//);
+    assert.equal(existsSync(resolve("../..", item.localPoster)), true);
+    assert.equal(existsSync(resolve("../..", item.localHlsManifest)), true);
+    assert.equal(item.localVariantManifests.length, 5);
+
+    for (const variantPath of item.localVariantManifests) {
+      assert.equal(existsSync(resolve("../..", variantPath)), true);
+    }
+  }
 });
