@@ -1,0 +1,42 @@
+﻿[
+    {
+        "file":  "apps/web/src/assets/local-candidates/selected/bg-anor-londo-skyline.jpg",
+        "source":  "C:\\Program Files (x86)\\Steam\\userdata\\842766010\\760\\remote\\570940\\screenshots\\20260518233120_1.jpg",
+        "role":  "Primary app background; clean skyline, no HUD",
+        "width":  2560,
+        "height":  1440,
+        "usageNote":  "Local Steam screenshot from Dark Souls Remastered; copyrighted game content. Use for local fan prototype only unless licensed."
+    },
+    {
+        "file":  "apps/web/src/assets/local-candidates/selected/bg-anor-londo-cathedral.jpg",
+        "source":  "C:\\Program Files (x86)\\Steam\\userdata\\842766010\\760\\remote\\570940\\screenshots\\20260518233127_1.jpg",
+        "role":  "Secondary background / hero mood",
+        "width":  2560,
+        "height":  1440,
+        "usageNote":  "Local Steam screenshot from Dark Souls Remastered; copyrighted game content. Use for local fan prototype only unless licensed."
+    },
+    {
+        "file":  "apps/web/src/assets/local-candidates/selected/bg-anor-londo-overlook.jpg",
+        "source":  "C:\\Program Files (x86)\\Steam\\userdata\\842766010\\760\\remote\\570940\\screenshots\\20260518233141_1.jpg",
+        "role":  "Character-facing background; use with dark overlay",
+        "width":  2560,
+        "height":  1440,
+        "usageNote":  "Local Steam screenshot from Dark Souls Remastered; copyrighted game content. Use for local fan prototype only unless licensed."
+    },
+    {
+        "file":  "apps/web/src/assets/local-candidates/selected/bg-bonfire-ruins-original.jpg",
+        "source":  "C:\\Program Files (x86)\\Steam\\userdata\\1202051825\\760\\remote\\570940\\screenshots\\20260221002541_1.jpg",
+        "role":  "Bonfire source image; has HUD/prompt",
+        "width":  1920,
+        "height":  1080,
+        "usageNote":  "Local Steam screenshot from Dark Souls Remastered; copyrighted game content. Use for local fan prototype only unless licensed."
+    },
+    {
+        "file":  "apps/web/src/assets/local-candidates/selected/bg-bonfire-ruins-cropped-banner.jpg",
+        "source":  "C:\\Program Files (x86)\\Steam\\userdata\\1202051825\\760\\remote\\570940\\screenshots\\20260221002541_1.jpg",
+        "role":  "Cropped bonfire banner; HUD/prompt mostly removed",
+        "width":  2560,
+        "height":  820,
+        "usageNote":  "Derived crop from local Steam screenshot; copyrighted game content. Use for local fan prototype only unless licensed."
+    }
+]

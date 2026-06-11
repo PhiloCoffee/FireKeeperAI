@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
+  Edit3,
   Flame,
   Loader2,
   MessageSquareText,
@@ -8,7 +9,8 @@ import {
   ScrollText,
   ShieldAlert,
   Swords,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import {
   createTask,
@@ -19,26 +21,29 @@ import {
   streamChat,
   updateTask
 } from "./api/client.js";
-
-const CLASS_OPTIONS = [
-  { value: "boss", label: "Boss", icon: "B", hint: "Major work" },
-  { value: "elite", label: "Elite", icon: "E", hint: "Important" },
-  { value: "regular", label: "Regular", icon: "R", hint: "Daily" },
-  { value: "tedious", label: "Tedious", icon: "T", hint: "Necessary" }
-];
-
-const STATUS_LABELS = {
-  new: "New",
-  active: "Active",
-  blocked: "Blocked",
-  kindled: "Kindled"
-};
+import fireKeeperArt from "./assets/char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg";
+import bonfireBanner from "./assets/object/bonfire/bg-bonfire-ruins-cropped-banner.jpg";
+import {
+  CLASS_OPTIONS,
+  STATUS_LABELS,
+  STATUS_OPTIONS,
+  countTasks,
+  filterTasks,
+  nextKindleStatus,
+  normalizeTaskDraft,
+  removeTask,
+  replaceTask
+} from "./taskLogic.js";
 
 export function App() {
   const [health, setHealth] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [selectedClass, setSelectedClass] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [taskDraft, setTaskDraft] = useState({ title: "", class: "regular" });
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editDraft, setEditDraft] = useState({ title: "", class: "regular", status: "active" });
+  const [pendingTaskId, setPendingTaskId] = useState(null);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -61,22 +66,11 @@ export function App() {
   }, []);
 
   const visibleTasks = useMemo(() => {
-    if (selectedClass === "all") {
-      return tasks;
-    }
-    return tasks.filter((task) => task.class === selectedClass);
-  }, [selectedClass, tasks]);
+    return filterTasks(tasks, { selectedClass, selectedStatus });
+  }, [selectedClass, selectedStatus, tasks]);
 
   const counts = useMemo(() => {
-    return tasks.reduce(
-      (next, task) => {
-        next.all += 1;
-        next[task.class] += 1;
-        if (task.status === "kindled") next.kindled += 1;
-        return next;
-      },
-      { all: 0, boss: 0, elite: 0, regular: 0, tedious: 0, kindled: 0 }
-    );
+    return countTasks(tasks);
   }, [tasks]);
 
   async function handleAddTask(event) {
@@ -85,26 +79,71 @@ export function App() {
       return;
     }
 
-    const result = await createTask({
-      title: taskDraft.title,
-      class: taskDraft.class,
-      status: "active",
-      priority: taskDraft.class === "boss" ? 1 : 2
-    });
+    const payload = normalizeTaskDraft(taskDraft);
+    const result = await createTask(payload);
     setTasks((current) => [result.task, ...current]);
     setTaskDraft({ title: "", class: taskDraft.class });
   }
 
   async function handleKindle(task) {
-    const result = await updateTask(task.id, {
-      status: task.status === "kindled" ? "active" : "kindled"
-    });
-    setTasks((current) => current.map((item) => (item.id === task.id ? result.task : item)));
+    setPendingTaskId(task.id);
+    try {
+      const result = await updateTask(task.id, { status: nextKindleStatus(task) });
+      setTasks((current) => replaceTask(current, result.task));
+    } finally {
+      setPendingTaskId(null);
+    }
   }
 
   async function handleDelete(task) {
-    await deleteTask(task.id);
-    setTasks((current) => current.filter((item) => item.id !== task.id));
+    setPendingTaskId(task.id);
+    try {
+      await deleteTask(task.id);
+      setTasks((current) => removeTask(current, task.id));
+      if (editingTaskId === task.id) {
+        setEditingTaskId(null);
+      }
+    } finally {
+      setPendingTaskId(null);
+    }
+  }
+
+  function handleStartEdit(task) {
+    setEditingTaskId(task.id);
+    setEditDraft({
+      title: task.title,
+      class: task.class,
+      status: task.status
+    });
+  }
+
+  function handleCancelEdit() {
+    setEditingTaskId(null);
+    setEditDraft({ title: "", class: "regular", status: "active" });
+  }
+
+  async function handleSaveEdit(task) {
+    const title = editDraft.title.trim();
+    if (!title) {
+      setNotice("Task title is required.");
+      return;
+    }
+
+    setPendingTaskId(task.id);
+    try {
+      const result = await updateTask(task.id, {
+        title,
+        class: editDraft.class,
+        status: editDraft.status
+      });
+      setTasks((current) => replaceTask(current, result.task));
+      handleCancelEdit();
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setPendingTaskId(null);
+    }
   }
 
   async function handleExport() {
@@ -187,6 +226,10 @@ export function App() {
           </div>
         </header>
 
+        <figure className="bonfire-banner" aria-label="Bonfire rest point">
+          <img src={bonfireBanner} alt="" />
+        </figure>
+
         <form className="quick-capture" onSubmit={handleAddTask}>
           <input
             value={taskDraft.title}
@@ -226,6 +269,18 @@ export function App() {
           ))}
         </nav>
 
+        <nav className="status-filters" aria-label="Status filters">
+          {STATUS_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              className={selectedStatus === option.value ? "selected" : ""}
+              onClick={() => setSelectedStatus(option.value)}
+            >
+              {option.label} <span>{counts[option.value]}</span>
+            </button>
+          ))}
+        </nav>
+
         <div className="task-list">
           {visibleTasks.length === 0 ? (
             <div className="empty-state">
@@ -233,7 +288,21 @@ export function App() {
               <span>No tasks in this covenant.</span>
             </div>
           ) : (
-            visibleTasks.map((task) => <TaskRow key={task.id} task={task} onKindle={handleKindle} onDelete={handleDelete} />)
+            visibleTasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                editDraft={editDraft}
+                isEditing={editingTaskId === task.id}
+                isPending={pendingTaskId === task.id}
+                onCancelEdit={handleCancelEdit}
+                onChangeEditDraft={setEditDraft}
+                onDelete={handleDelete}
+                onKindle={handleKindle}
+                onSaveEdit={handleSaveEdit}
+                onStartEdit={handleStartEdit}
+              />
+            ))
           )}
         </div>
       </section>
@@ -243,6 +312,9 @@ export function App() {
           <span />
           <span />
           <span />
+        </div>
+        <div className="fire-keeper-portrait" aria-hidden="true">
+          <img src={fireKeeperArt} alt="" />
         </div>
 
         <header className="pane-header chat-header">
@@ -284,7 +356,61 @@ export function App() {
   );
 }
 
-function TaskRow({ task, onKindle, onDelete }) {
+function TaskRow({
+  task,
+  editDraft,
+  isEditing,
+  isPending,
+  onCancelEdit,
+  onChangeEditDraft,
+  onDelete,
+  onKindle,
+  onSaveEdit,
+  onStartEdit
+}) {
+  if (isEditing) {
+    return (
+      <article className={`task-row editing ${task.class}`}>
+        <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === editDraft.class)?.icon}</div>
+        <div className="task-edit-grid">
+          <input
+            value={editDraft.title}
+            onChange={(event) => onChangeEditDraft((current) => ({ ...current, title: event.target.value }))}
+            aria-label="Edit task title"
+          />
+          <select
+            value={editDraft.class}
+            onChange={(event) => onChangeEditDraft((current) => ({ ...current, class: event.target.value }))}
+            aria-label="Edit task class"
+          >
+            {CLASS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={editDraft.status}
+            onChange={(event) => onChangeEditDraft((current) => ({ ...current, status: event.target.value }))}
+            aria-label="Edit task status"
+          >
+            {Object.entries(STATUS_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button className="row-action" onClick={() => onSaveEdit(task)} disabled={isPending} title="Save task">
+          <Check size={17} />
+        </button>
+        <button className="row-action" onClick={onCancelEdit} disabled={isPending} title="Cancel edit">
+          <X size={17} />
+        </button>
+      </article>
+    );
+  }
+
   return (
     <article className={`task-row ${task.class} ${task.status === "kindled" ? "kindled" : ""}`}>
       <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === task.class)?.icon}</div>
@@ -294,10 +420,13 @@ function TaskRow({ task, onKindle, onDelete }) {
           {CLASS_OPTIONS.find((option) => option.value === task.class)?.label} · {STATUS_LABELS[task.status]}
         </p>
       </div>
-      <button className="row-action" onClick={() => onKindle(task)} title="Toggle kindled">
+      <button className="row-action" onClick={() => onStartEdit(task)} disabled={isPending} title="Edit task">
+        <Edit3 size={16} />
+      </button>
+      <button className="row-action" onClick={() => onKindle(task)} disabled={isPending} title="Toggle kindled">
         <Check size={17} />
       </button>
-      <button className="row-action danger" onClick={() => onDelete(task)} title="Delete task">
+      <button className="row-action danger" onClick={() => onDelete(task)} disabled={isPending} title="Delete task">
         <Trash2 size={17} />
       </button>
     </article>

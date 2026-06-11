@@ -1,0 +1,18 @@
+﻿[
+    {
+        "file":  "apps/web/src/assets/char/fire-keeper/fire-keeper-wallpaper-eddy-shinjuku.jpg",
+        "source":  "https://images3.alphacoders.com/801/801433.jpg",
+        "sourcePage":  "https://wall.alphacoders.com/big.php?i=801433",
+        "credit":  "EDDY SHINJUKU",
+        "licenseNote":  "Free for private, personal use per Alpha Coders page",
+        "usageNote":  "Use only for local/private fan prototype unless licensed from the artist/rightsholder."
+    },
+    {
+        "file":  "apps/web/src/assets/char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg",
+        "source":  "https://artfiles.alphacoders.com/132/132996.jpg",
+        "sourcePage":  "https://art.alphacoders.com/arts/view/132996",
+        "credit":  "Rashed AlAkroka",
+        "licenseNote":  "Free for private, personal use per Alpha Coders page",
+        "usageNote":  "Use only for local/private fan prototype unless licensed from the artist/rightsholder."
+    }
+]
