@@ -3,6 +3,7 @@ import {
   Check,
   Edit3,
   Flame,
+  Languages,
   Loader2,
   MessageSquareText,
   Plus,
@@ -24,6 +25,12 @@ import {
 import fireKeeperArt from "./assets/char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg";
 import bonfireBanner from "./assets/object/bonfire/bg-bonfire-ruins-cropped-banner.jpg";
 import {
+  LANGUAGE_OPTIONS,
+  TRANSLATIONS,
+  formatMessage,
+  getStoredLanguage
+} from "./i18n.js";
+import {
   CLASS_OPTIONS,
   STATUS_LABELS,
   STATUS_OPTIONS,
@@ -36,6 +43,7 @@ import {
 } from "./taskLogic.js";
 
 export function App() {
+  const [language, setLanguage] = useState(getStoredLanguage);
   const [health, setHealth] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [selectedClass, setSelectedClass] = useState("all");
@@ -44,16 +52,36 @@ export function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editDraft, setEditDraft] = useState({ title: "", class: "regular", status: "active" });
   const [pendingTaskId, setPendingTaskId] = useState(null);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState(() => [
     {
       role: "assistant",
-      content: "The bonfire is lit. Tell me what weighs on your quest, or capture the next task."
+      content: TRANSLATIONS[getStoredLanguage()].initialAssistantMessage,
+      isSystemGreeting: true
     }
   ]);
   const [conversationId, setConversationId] = useState(null);
   const [chatDraft, setChatDraft] = useState("");
   const [isChatting, setIsChatting] = useState(false);
   const [notice, setNotice] = useState("");
+  const copy = TRANSLATIONS[language];
+  const nextLanguage = language === "en" ? "zh" : "en";
+  const currentLanguage = LANGUAGE_OPTIONS[language];
+  const nextLanguageOption = LANGUAGE_OPTIONS[nextLanguage];
+
+  const classOptions = useMemo(() => {
+    return CLASS_OPTIONS.map((option) => ({
+      ...option,
+      label: copy.classLabels[option.value],
+      hint: copy.classHints[option.value]
+    }));
+  }, [copy]);
+
+  const statusOptions = useMemo(() => {
+    return STATUS_OPTIONS.map((option) => ({
+      ...option,
+      label: copy.statusFilterLabels[option.value]
+    }));
+  }, [copy]);
 
   async function refreshTasks() {
     const result = await getTasks();
@@ -64,6 +92,18 @@ export function App() {
     getHealth().then(setHealth).catch((error) => setNotice(error.message));
     refreshTasks().catch((error) => setNotice(error.message));
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("firekeeper-language", language);
+    document.documentElement.lang = currentLanguage.htmlLang;
+    document.title = copy.appTitle;
+    setMessages((current) => {
+      if (current.length === 1 && current[0].isSystemGreeting) {
+        return [{ ...current[0], content: copy.initialAssistantMessage }];
+      }
+      return current;
+    });
+  }, [copy, currentLanguage.htmlLang, language]);
 
   const visibleTasks = useMemo(() => {
     return filterTasks(tasks, { selectedClass, selectedStatus });
@@ -125,7 +165,7 @@ export function App() {
   async function handleSaveEdit(task) {
     const title = editDraft.title.trim();
     if (!title) {
-      setNotice("Task title is required.");
+      setNotice(copy.taskPane.titleRequired);
       return;
     }
 
@@ -147,8 +187,8 @@ export function App() {
   }
 
   async function handleExport() {
-    const result = await exportMarkdown();
-    setNotice(`Markdown export written: ${result.filePath}`);
+    const result = await exportMarkdown(language);
+    setNotice(formatMessage(copy.taskPane.exportDone, { filePath: result.filePath }));
   }
 
   async function handleChat(event) {
@@ -166,6 +206,7 @@ export function App() {
     try {
       await streamChat({
         conversationId,
+        language,
         message: text,
         includeOpenTasks: true,
         onMeta: (data) => setConversationId(data.conversationId),
@@ -184,7 +225,7 @@ export function App() {
             const last = next[next.length - 1];
             next[next.length - 1] = {
               ...last,
-              content: last.content || `Claude is unavailable: ${error}`
+              content: last.content || formatMessage(copy.chatPane.claudeUnavailable, { error })
             };
             return next;
           });
@@ -199,17 +240,26 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <aside className="side-rail" aria-label="Fire Keeper navigation">
-        <div className="brand-mark" title="Fire Keeper AI">
+      <aside className="side-rail" aria-label={copy.navLabel}>
+        <div className="brand-mark" title={copy.appTitle}>
           <Flame size={26} />
         </div>
-        <button className="rail-button active" title="Tasks">
+        <button
+          className="rail-button language-toggle"
+          title={copy.language.toggleTitle}
+          aria-label={copy.language.ariaLabel}
+          onClick={() => setLanguage(nextLanguage)}
+        >
+          <Languages size={17} />
+          <span>{nextLanguageOption.switchLabel}</span>
+        </button>
+        <button className="rail-button active" title={copy.nav.tasks}>
           <Swords size={20} />
         </button>
-        <button className="rail-button" title="Chat">
+        <button className="rail-button" title={copy.nav.chat}>
           <MessageSquareText size={20} />
         </button>
-        <button className="rail-button" title="Export" onClick={handleExport}>
+        <button className="rail-button" title={copy.nav.export} onClick={handleExport}>
           <ScrollText size={20} />
         </button>
       </aside>
@@ -217,8 +267,8 @@ export function App() {
       <section className="task-pane">
         <header className="pane-header">
           <div>
-            <p className="eyebrow">Fire Keeper AI</p>
-            <h1>Bonfire Ledger</h1>
+            <p className="eyebrow">{copy.taskPane.eyebrow}</p>
+            <h1>{copy.taskPane.title}</h1>
           </div>
           <div className="kindled-count">
             <Flame size={18} />
@@ -226,7 +276,7 @@ export function App() {
           </div>
         </header>
 
-        <figure className="bonfire-banner" aria-label="Bonfire rest point">
+        <figure className="bonfire-banner" aria-label={copy.taskPane.bannerLabel}>
           <img src={bonfireBanner} alt="" />
         </figure>
 
@@ -234,30 +284,30 @@ export function App() {
           <input
             value={taskDraft.title}
             onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
-            placeholder="Capture a task"
-            aria-label="Task title"
+            placeholder={copy.taskPane.capturePlaceholder}
+            aria-label={copy.taskPane.taskTitleLabel}
           />
           <select
             value={taskDraft.class}
             onChange={(event) => setTaskDraft((current) => ({ ...current, class: event.target.value }))}
-            aria-label="Task class"
+            aria-label={copy.taskPane.taskClassLabel}
           >
-            {CLASS_OPTIONS.map((option) => (
+            {classOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
-          <button type="submit" className="icon-command" title="Add task">
+          <button type="submit" className="icon-command" title={copy.taskPane.addTaskTitle}>
             <Plus size={18} />
           </button>
         </form>
 
-        <nav className="class-filters" aria-label="Task filters">
+        <nav className="class-filters" aria-label={copy.taskPane.classFiltersLabel}>
           <button className={selectedClass === "all" ? "selected" : ""} onClick={() => setSelectedClass("all")}>
-            All <span>{counts.all}</span>
+            {copy.statusFilterLabels.all} <span>{counts.all}</span>
           </button>
-          {CLASS_OPTIONS.map((option) => (
+          {classOptions.map((option) => (
             <button
               key={option.value}
               className={selectedClass === option.value ? "selected" : ""}
@@ -269,8 +319,8 @@ export function App() {
           ))}
         </nav>
 
-        <nav className="status-filters" aria-label="Status filters">
-          {STATUS_OPTIONS.map((option) => (
+        <nav className="status-filters" aria-label={copy.taskPane.statusFiltersLabel}>
+          {statusOptions.map((option) => (
             <button
               key={option.value}
               className={selectedStatus === option.value ? "selected" : ""}
@@ -285,7 +335,7 @@ export function App() {
           {visibleTasks.length === 0 ? (
             <div className="empty-state">
               <ShieldAlert size={22} />
-              <span>No tasks in this covenant.</span>
+              <span>{copy.taskPane.empty}</span>
             </div>
           ) : (
             visibleTasks.map((task) => (
@@ -295,6 +345,8 @@ export function App() {
                 editDraft={editDraft}
                 isEditing={editingTaskId === task.id}
                 isPending={pendingTaskId === task.id}
+                classOptions={classOptions}
+                copy={copy}
                 onCancelEdit={handleCancelEdit}
                 onChangeEditDraft={setEditDraft}
                 onDelete={handleDelete}
@@ -319,19 +371,19 @@ export function App() {
 
         <header className="pane-header chat-header">
           <div>
-            <p className="eyebrow">Claude API</p>
-            <h2>Guidance</h2>
+            <p className="eyebrow">{copy.chatPane.eyebrow}</p>
+            <h2>{copy.chatPane.title}</h2>
           </div>
           <div className={health?.claudeConfigured ? "status-pill ready" : "status-pill"}>
-            {health?.claudeConfigured ? "Claude ready" : "API key needed"}
+            {health?.claudeConfigured ? copy.chatPane.ready : copy.chatPane.apiKeyNeeded}
           </div>
         </header>
 
         <div className="message-stack" aria-live="polite">
           {messages.map((message, index) => (
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-              <span>{message.role === "assistant" ? "Fire Keeper" : "You"}</span>
-              <p>{message.content || (isChatting ? "..." : "")}</p>
+              <span>{message.role === "assistant" ? copy.chatPane.assistantName : copy.chatPane.userName}</span>
+              <p>{message.content || (isChatting ? copy.chatPane.loading : "")}</p>
             </article>
           ))}
         </div>
@@ -342,13 +394,13 @@ export function App() {
           <textarea
             value={chatDraft}
             onChange={(event) => setChatDraft(event.target.value)}
-            placeholder="Ask Claude to break down a task, choose priorities, or plan the next rest."
-            aria-label="Chat message"
+            placeholder={copy.chatPane.placeholder}
+            aria-label={copy.nav.chat}
             rows={3}
           />
-          <button type="submit" disabled={isChatting} title="Send message">
+          <button type="submit" disabled={isChatting} title={copy.chatPane.sendTitle}>
             {isChatting ? <Loader2 className="spin" size={18} /> : <MessageSquareText size={18} />}
-            <span>Send</span>
+            <span>{copy.chatPane.send}</span>
           </button>
         </form>
       </section>
@@ -358,6 +410,8 @@ export function App() {
 
 function TaskRow({
   task,
+  classOptions,
+  copy,
   editDraft,
   isEditing,
   isPending,
@@ -368,22 +422,25 @@ function TaskRow({
   onSaveEdit,
   onStartEdit
 }) {
+  const classOption = classOptions.find((option) => option.value === task.class);
+  const editClassOption = classOptions.find((option) => option.value === editDraft.class);
+
   if (isEditing) {
     return (
       <article className={`task-row editing ${task.class}`}>
-        <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === editDraft.class)?.icon}</div>
+        <div className="task-class">{editClassOption?.icon}</div>
         <div className="task-edit-grid">
           <input
             value={editDraft.title}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, title: event.target.value }))}
-            aria-label="Edit task title"
+            aria-label={copy.edit.titleLabel}
           />
           <select
             value={editDraft.class}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, class: event.target.value }))}
-            aria-label="Edit task class"
+            aria-label={copy.edit.classLabel}
           >
-            {CLASS_OPTIONS.map((option) => (
+            {classOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -392,19 +449,19 @@ function TaskRow({
           <select
             value={editDraft.status}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, status: event.target.value }))}
-            aria-label="Edit task status"
+            aria-label={copy.edit.statusLabel}
           >
             {Object.entries(STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
-                {label}
+                {copy.statusLabels[value] || label}
               </option>
             ))}
           </select>
         </div>
-        <button className="row-action" onClick={() => onSaveEdit(task)} disabled={isPending} title="Save task">
+        <button className="row-action" onClick={() => onSaveEdit(task)} disabled={isPending} title={copy.edit.saveTitle}>
           <Check size={17} />
         </button>
-        <button className="row-action" onClick={onCancelEdit} disabled={isPending} title="Cancel edit">
+        <button className="row-action" onClick={onCancelEdit} disabled={isPending} title={copy.edit.cancelTitle}>
           <X size={17} />
         </button>
       </article>
@@ -413,20 +470,22 @@ function TaskRow({
 
   return (
     <article className={`task-row ${task.class} ${task.status === "kindled" ? "kindled" : ""}`}>
-      <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === task.class)?.icon}</div>
+      <div className="task-class">{classOption?.icon}</div>
       <div className="task-body">
         <h3>{task.title}</h3>
         <p>
-          {CLASS_OPTIONS.find((option) => option.value === task.class)?.label} · {STATUS_LABELS[task.status]}
+          {classOption?.label}
+          {copy.taskPane.metaSeparator}
+          {copy.statusLabels[task.status] || STATUS_LABELS[task.status]}
         </p>
       </div>
-      <button className="row-action" onClick={() => onStartEdit(task)} disabled={isPending} title="Edit task">
+      <button className="row-action" onClick={() => onStartEdit(task)} disabled={isPending} title={copy.edit.editTitle}>
         <Edit3 size={16} />
       </button>
-      <button className="row-action" onClick={() => onKindle(task)} disabled={isPending} title="Toggle kindled">
+      <button className="row-action" onClick={() => onKindle(task)} disabled={isPending} title={copy.edit.kindleTitle}>
         <Check size={17} />
       </button>
-      <button className="row-action danger" onClick={() => onDelete(task)} disabled={isPending} title="Delete task">
+      <button className="row-action danger" onClick={() => onDelete(task)} disabled={isPending} title={copy.edit.deleteTitle}>
         <Trash2 size={17} />
       </button>
     </article>

@@ -1,10 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-
-const SYSTEM_PROMPT = `You are Fire Keeper AI, a focused personal planning assistant.
-Use a calm, atmospheric tone, but prioritize clarity and useful action.
-Help the user capture tasks, break down large work, classify effort, and decide what to do next.
-Do not over-roleplay. Keep responses concise unless the user asks for depth.
-When you identify tasks, return structured task suggestions when possible.`;
+import { getLanguageCopy } from "./i18nService.js";
 
 export function createClaudeClient() {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -16,27 +11,38 @@ export function createClaudeClient() {
   });
 }
 
-export function buildTaskContext(tasks) {
+export function buildTaskContext(tasks, language = "en") {
+  const copy = getLanguageCopy(language);
+
   if (!tasks.length) {
-    return "Current open tasks: none.";
+    return copy.taskContextEmpty;
   }
 
   const lines = tasks
     .filter((task) => task.status !== "kindled")
     .slice(0, 25)
-    .map((task) => `- ${task.title} [${task.class}, ${task.status}, priority ${task.priority}]`);
+    .map((task) => {
+      const taskClass = copy.classLabels[task.class] || task.class;
+      const status = copy.statusLabels[task.status] || task.status;
+      return `- ${task.title} [${taskClass}, ${status}, priority ${task.priority}]`;
+    });
 
-  return `Current open tasks:\n${lines.join("\n")}`;
+  if (!lines.length) {
+    return copy.taskContextEmpty;
+  }
+
+  return `${copy.taskContextTitle}\n${lines.join("\n")}`;
 }
 
-export async function streamClaudeResponse({ messages, taskContext, onText, onUsage }) {
+export async function streamClaudeResponse({ language = "en", messages, taskContext, onText, onUsage }) {
   const client = createClaudeClient();
   if (!client) {
     throw new Error("ANTHROPIC_API_KEY is not configured.");
   }
 
   const model = process.env.CLAUDE_MODEL || "claude-sonnet-4-6";
-  const system = `${SYSTEM_PROMPT}\n\n${taskContext}`;
+  const copy = getLanguageCopy(language);
+  const system = `${copy.systemPrompt}\n\n${taskContext}`;
 
   const stream = client.messages.stream({
     model,

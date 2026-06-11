@@ -51,11 +51,12 @@ export function deleteTask(id) {
   });
 }
 
-export function exportMarkdown() {
-  return request("/api/export/markdown");
+export function exportMarkdown(language = "en") {
+  const params = new URLSearchParams({ language });
+  return request(`/api/export/markdown?${params.toString()}`);
 }
 
-export async function streamChat({ conversationId, message, includeOpenTasks, onMeta, onToken, onDone, onError }) {
+export async function streamChat({ conversationId, language = "en", message, includeOpenTasks, onMeta, onToken, onDone, onError }) {
   const response = await fetch("/api/chat/stream", {
     method: "POST",
     headers: JSON_HEADERS,
@@ -63,6 +64,7 @@ export async function streamChat({ conversationId, message, includeOpenTasks, on
       conversationId,
       message,
       context: {
+        language,
         includeOpenTasks
       }
     })

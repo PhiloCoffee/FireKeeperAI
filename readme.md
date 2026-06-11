@@ -1,98 +1,111 @@
-# 🔥 Fire Keeper AI (防火女AI)
+# Fire Keeper AI (防火女 AI)
 
-Init: 02/01/2025, The project officially initiated...
+Fire Keeper AI is a Dark Souls inspired personal task manager with an AI guidance panel. It combines a themed React interface, local task storage, Markdown export, and Claude streaming chat.
 
-> May the flames guide thee. A Dark Souls inspired AI assistant for task management and conversation.
+> May the flames guide thee.
 
-## 🎯 Project Overview
-Fire Keeper AI is your personal assistant that combines task management with AI conversation capabilities, wrapped in a Dark Souls themed interface. The project aims to create an immersive, practical tool that helps manage your daily tasks while maintaining the atmospheric essence of Dark Souls.
+## Current Features
 
+- Dual-pane web app: task ledger on the left, AI guidance on the right.
+- Task classes: Boss, Elite, Regular, Tedious.
+- Task statuses: New, Active, Blocked, Kindled.
+- Create, edit, delete, filter, and kindle tasks.
+- Claude streaming chat with current open tasks included as context.
+- Markdown export to `data/exports`.
+- One-click English / Chinese switching.
+- Local SQLite persistence under `data/firekeeper.sqlite`.
 
-> Soul could be found here: 
->
-> **Bonfire Lit** by @Holly Du
-> 
-> https://chatgpt.com/g/g-6788056bb1b48191aa120623ed0232f3-bonfire-lit
-> ![GPTs](docs/asset/GPTs.png)
-## ⚔️ Core Features
+## Language Support
 
-### LLM Integration
-- [ ] Research and evaluate existing LLM chat GUIs
-- [ ] Implement lightweight testing with AISuite
-- [ ] Support multiple LLM backends:
-  - OpenAI GPT
-  - DeepSeek
-  - Claude
-  - Local models support
+The app supports one-click English and Simplified Chinese switching from the side rail.
 
-### Frontend Development
-- [ ] Design main interface with dual-panel layout:
-  - TODO List panel
-  - Conversation panel
-- [ ] Implement google calendar view with atmospheric background
-- [ ] Create Dark Souls inspired animations:
-  - Bonfire flame effects
-  - Task completion animations
-- [ ] Develop task classification system:
-  - 💀 Boss (Major tasks)
-  - ⚔️ Elite (Medium priority)
-  - 👿 Regular (Normal tasks)
-  - 💩 Tedious (But necessary)
+- UI labels, placeholders, tooltips, task classes, and statuses switch immediately.
+- The selected language is persisted in `localStorage`.
+- Claude requests include the active language.
+- The backend switches the Claude system prompt with the UI language.
+- Open-task context sent to Claude localizes task class and status names.
+- Markdown exports use the active language for titles, sections, task classes, and empty states.
 
-  - 🔥 Kindled (Completed bonfire that light your way)
+Chinese copy follows official Dark Souls style terminology:
 
-### Backend Development
-- [ ] Implement local data storage system
-- [ ] Develop encryption for secure file I/O
-- [ ] Create Markdown export functionality
-- [ ] Set up GitHub private repository for data management
+- Fire Keeper: 防火女
+- Bonfire: 篝火
+- Covenant: 誓约
 
+## Tech Stack
 
-### Graphics 
-- [ ] Implement atmospheric Dark Souls themed interface
-- [ ] Set up image processing pipeline:
-  - Sharp for optimization
-  - Canvas API for effects
-  - WebGL for advanced visuals
-- [ ] Create and integrate assets:
-  - [ ] Generate themed art with DALL-E 3/Midjourney / Hand made
-  - [ ] Design custom SVG icons
-  - [ ] Build Dark Souls inspired elements:
-    - [ ] Bonfire navigation hub
-    - [ ] Weapon icon buttons
-    - [ ] Parchment backgrounds
-    - [ ] Gothic frame borders
+- Frontend: React 19, Vite, CSS, lucide-react
+- Backend: Express 5, Claude API via `@anthropic-ai/sdk`
+- Storage: Node SQLite (`node:sqlite`)
+- Runtime data: local `data/` directory
 
-## 🛠️ Tech Stack
-- Frontend: TypeScript, React/Svelte, CSS/HTML
-- Backend: Python
-- Storage: Local SQLite/JSON
-- Version Control: Git/GitHub
+## Project Structure
 
-## 📁 Project Structure
-Note: this could be changed a lot. 
+```text
+FireKeeperAI/
+├─ apps/
+│  ├─ api/
+│  │  └─ src/
+│  │     ├─ db/
+│  │     ├─ routes/
+│  │     └─ services/
+│  └─ web/
+│     ├─ src/
+│     │  ├─ api/
+│     │  ├─ assets/
+│     │  ├─ App.jsx
+│     │  ├─ i18n.js
+│     │  └─ taskLogic.js
+│     └─ test/
+├─ data/
+├─ docs/
+└─ package.json
+```
+
+## Setup
 
 ```bash
-BONFIRE-LIT-AI\
-├─config
-├─docs
-│  ├─api
-│  └─design
-├─scripts
-├─src
-│  ├─backend
-│  │  ├─api
-│  │  ├─models
-│  │  └─services
-│  ├─frontend
-│  │  ├─components
-│  │  ├─pages
-│  │  ├─styles
-│  │  └─utils
-│  └─shared
-│      ├─constants
-│      └─types
-└─tests
-    ├─integration
-    └─unit
+npm install
 ```
+
+Create a local `.env` file from `.env.example`:
+
+```bash
+ANTHROPIC_API_KEY=
+CLAUDE_MODEL=claude-sonnet-4-6
+PORT=8787
+WEB_ORIGIN=http://localhost:5173
+```
+
+## Development
+
+```bash
+npm run dev
+```
+
+The default URLs are:
+
+- Web: `http://localhost:5173`
+- API: `http://localhost:8787`
+
+On Windows PowerShell, if script execution policy blocks `npm`, use `npm.cmd`:
+
+```bash
+npm.cmd run dev
+```
+
+## Verification
+
+```bash
+npm.cmd test
+npm.cmd run build
+```
+
+Current test coverage includes task filtering/counting logic, language fallback/formatting, and localized Claude task context.
+
+## Original Soul
+
+**Bonfire Lit** by Holly Du  
+https://chatgpt.com/g/g-6788056bb1b48191aa120623ed0232f3-bonfire-lit
+
+![GPTs](docs/asset/GPTs.png)
