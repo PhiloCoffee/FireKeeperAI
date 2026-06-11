@@ -24,7 +24,9 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 68% 18%, rgba(233, 107, 44, 0.18), transparent 26rem),
+    linear-gradient(90deg, rgba(10, 9, 8, 0.96), rgba(10, 9, 8, 0.74) 46%, rgba(10, 9, 8, 0.9)),
+    radial-gradient(circle at 68% 18%, rgba(233, 107, 44, 0.2), transparent 26rem),
+    url("./assets/scene/local-screenshots/bg-anor-londo-skyline.jpg") center / cover fixed,
     linear-gradient(135deg, #17120f, #0d0c0b 58%, #1a120e);
   color: var(--text);
 }
@@ -95,6 +97,7 @@ button {
 }
 
 .task-pane {
+  position: relative;
   background: rgba(20, 17, 15, 0.72);
   border-right: 1px solid rgba(214, 170, 99, 0.15);
 }
@@ -104,7 +107,19 @@ button {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
   overflow: hidden;
-  background: rgba(10, 9, 8, 0.22);
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0.68), rgba(10, 9, 8, 0.9)),
+    rgba(10, 9, 8, 0.22);
+}
+
+.chat-pane::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 82% 18%, rgba(233, 107, 44, 0.15), transparent 22rem),
+    linear-gradient(180deg, rgba(255, 207, 129, 0.06), transparent 34%);
+  pointer-events: none;
 }
 
 .pane-header {
@@ -160,6 +175,34 @@ h2 {
   white-space: nowrap;
 }
 
+.bonfire-banner {
+  position: relative;
+  height: 118px;
+  margin: -6px 0 18px;
+  overflow: hidden;
+  border: 1px solid rgba(214, 170, 99, 0.18);
+  border-radius: 8px;
+  background: #100d0b;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+.bonfire-banner::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(20, 17, 15, 0.72), transparent 52%, rgba(20, 17, 15, 0.82)),
+    linear-gradient(180deg, rgba(20, 17, 15, 0.12), rgba(20, 17, 15, 0.76));
+}
+
+.bonfire-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 58%;
+  filter: saturate(0.92) contrast(1.06);
+}
+
 .status-pill {
   color: #c9a999;
 }
@@ -199,14 +242,20 @@ h2 {
   box-shadow: 0 0 0 3px rgba(233, 107, 44, 0.16);
 }
 
-.class-filters {
+.class-filters,
+.status-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 10px;
+}
+
+.status-filters {
   margin-bottom: 16px;
 }
 
-.class-filters button {
+.class-filters button,
+.status-filters button {
   min-height: 34px;
   border: 1px solid rgba(214, 170, 99, 0.2);
   border-radius: 8px;
@@ -215,13 +264,15 @@ h2 {
   padding: 0 10px;
 }
 
-.class-filters button.selected {
+.class-filters button.selected,
+.status-filters button.selected {
   color: #ffe0b4;
   border-color: rgba(233, 107, 44, 0.76);
   background: rgba(76, 42, 28, 0.7);
 }
 
-.class-filters span {
+.class-filters span,
+.status-filters span {
   color: var(--gold);
 }
 
@@ -235,7 +286,7 @@ h2 {
 
 .task-row {
   display: grid;
-  grid-template-columns: 38px 1fr 36px 36px;
+  grid-template-columns: 38px 1fr 36px 36px 36px;
   align-items: center;
   gap: 10px;
   min-height: 70px;
@@ -244,6 +295,10 @@ h2 {
   border-left: 4px solid var(--gold);
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(47, 39, 32, 0.95), rgba(30, 26, 22, 0.95));
+}
+
+.task-row.editing {
+  grid-template-columns: 38px 1fr 36px 36px;
 }
 
 .task-row.boss {
@@ -293,10 +348,35 @@ h2 {
   font-size: 0.82rem;
 }
 
+.task-edit-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 116px 116px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.task-edit-grid input,
+.task-edit-grid select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  border: 1px solid rgba(214, 170, 99, 0.22);
+  border-radius: 8px;
+  background: rgba(18, 15, 13, 0.9);
+  color: var(--text);
+  outline: none;
+  padding: 0 10px;
+}
+
 .row-action {
   width: 36px;
   height: 36px;
   box-shadow: none;
+}
+
+.row-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .row-action.danger {
@@ -324,6 +404,33 @@ h2 {
   opacity: 0.32;
   pointer-events: none;
   filter: blur(0.2px);
+}
+
+.fire-keeper-portrait {
+  position: absolute;
+  right: max(-4vw, -42px);
+  bottom: 80px;
+  width: min(34vw, 390px);
+  max-width: 44%;
+  opacity: 0.2;
+  pointer-events: none;
+  transform: translateY(18px);
+}
+
+.fire-keeper-portrait::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 54% 42%, transparent 0 34%, rgba(10, 9, 8, 0.22) 58%),
+    linear-gradient(90deg, rgba(10, 9, 8, 0.18), rgba(10, 9, 8, 0.82));
+}
+
+.fire-keeper-portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.86) contrast(1.05);
 }
 
 .ambient-flame span {
@@ -364,7 +471,7 @@ h2 {
 
 .message-stack {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -403,7 +510,7 @@ h2 {
 
 .notice {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   min-height: 42px;
   margin-top: 12px;
   border-style: solid;
@@ -412,7 +519,7 @@ h2 {
 
 .chat-form {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr 104px;
   gap: 10px;
@@ -476,6 +583,11 @@ h2 {
   .chat-pane {
     padding: 20px;
   }
+
+  .fire-keeper-portrait {
+    width: min(42vw, 310px);
+    opacity: 0.14;
+  }
 }
 
 @media (max-width: 720px) {
@@ -497,8 +609,26 @@ h2 {
   }
 
   .quick-capture,
-  .chat-form {
+  .chat-form,
+  .task-edit-grid {
     grid-template-columns: 1fr;
+  }
+
+  .task-row,
+  .task-row.editing {
+    grid-template-columns: 34px 1fr 34px 34px;
+  }
+
+  .task-row:not(.editing) {
+    grid-template-columns: 34px 1fr 34px 34px 34px;
+  }
+
+  .bonfire-banner {
+    height: 96px;
+  }
+
+  .fire-keeper-portrait {
+    display: none;
   }
 
   .icon-command,
