@@ -27,9 +27,9 @@ A framework that supports multiple LLMs (GPT, DeepSeek, Claude, etc.), ensuring 
   - [ ] **Text Generation Web UI** (For easy multi-model switching)  
   
 
-⚠️ **TODO:**  
-- [ ] Local models (like DeepSeek, LLaMA) will be **cheaper** and **more private** 
-- [ ] Confirm user's Game Laptop's GPU & VRAM size
+**Historical follow-ups:**
+- Local model support remains a future option for privacy and cost control.
+- Hardware sizing only matters if local model support is added.
 
 ---
 

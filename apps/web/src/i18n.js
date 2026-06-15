@@ -43,6 +43,20 @@ export const TRANSLATIONS = {
       exportDone: "Markdown export written: {filePath}",
       metaSeparator: " - "
     },
+    lore: {
+      ledgerLabel: "Soul ledger",
+      soulsEarned: "Souls claimed",
+      soulsAtRisk: "Souls at risk",
+      humanity: "Humanity",
+      estus: "Estus"
+    },
+    bonfireWhispers: {
+      ash: "Ash waits for purpose. Capture the next task before the flame gutters.",
+      fogGate: "A fog gate blocks the path. Clear one blocked task before pressing deeper.",
+      lordSoul: "A lord soul waits ahead. Choose the boss task with both hands on the blade.",
+      flameLinked: "Every ember is kindled. Rest, repair, then choose the next road.",
+      ember: "Small embers still burn. One clean action will keep the dark back."
+    },
     chatPane: {
       eyebrow: "Claude API",
       title: "Guidance",
@@ -78,6 +92,7 @@ export const TRANSLATIONS = {
     },
     statusFilterLabels: {
       all: "All",
+      new: "New",
       active: "Active",
       blocked: "Blocked",
       kindled: "Kindled"
@@ -120,6 +135,20 @@ export const TRANSLATIONS = {
       exportDone: "Markdown 已导出：{filePath}",
       metaSeparator: " - "
     },
+    lore: {
+      ledgerLabel: "灵魂账本",
+      soulsEarned: "已取回 Souls",
+      soulsAtRisk: "风险中 Souls",
+      humanity: "Humanity",
+      estus: "Estus"
+    },
+    bonfireWhispers: {
+      ash: "灰烬还在等待目的。先记下一个任务，别让火光熄灭。",
+      fogGate: "雾门挡在路上。先清掉一个受阻任务，再往深处走。",
+      lordSoul: "王魂在前方等你。选中首领任务，双手持剑。",
+      flameLinked: "每一点余烬都已燃起。休息、修整，然后选下一条路。",
+      ember: "小小的余烬还在燃烧。一个干净的行动就能挡住黑暗。"
+    },
     chatPane: {
       eyebrow: "Claude API",
       title: "指引",
@@ -155,6 +184,7 @@ export const TRANSLATIONS = {
     },
     statusFilterLabels: {
       all: "全部",
+      new: "新建",
       active: "进行中",
       blocked: "受阻",
       kindled: "已燃火"

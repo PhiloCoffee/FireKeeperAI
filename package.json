@@ -12,10 +12,13 @@
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
     "build": "npm run build -w apps/web",
+    "docs:build": "node scripts/build-docs.mjs",
+    "docs:preview": "node scripts/preview-docs.mjs",
     "start": "npm run start -w apps/api",
     "test": "npm run test -w apps/api && npm run test -w apps/web"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^10.0.3",
+    "marked": "^18.0.5"
   }
 }

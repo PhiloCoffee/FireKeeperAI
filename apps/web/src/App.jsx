@@ -34,8 +34,10 @@ import {
   CLASS_OPTIONS,
   STATUS_LABELS,
   STATUS_OPTIONS,
+  calculateSoulLedger,
   countTasks,
   filterTasks,
+  getBonfireWhisper,
   nextKindleStatus,
   normalizeTaskDraft,
   removeTask,
@@ -113,16 +115,28 @@ export function App() {
     return countTasks(tasks);
   }, [tasks]);
 
+  const soulLedger = useMemo(() => {
+    return calculateSoulLedger(tasks);
+  }, [tasks]);
+
+  const bonfireWhisper = copy.bonfireWhispers[getBonfireWhisper(tasks)];
+
   async function handleAddTask(event) {
     event.preventDefault();
     if (!taskDraft.title.trim()) {
+      setNotice(copy.taskPane.titleRequired);
       return;
     }
 
-    const payload = normalizeTaskDraft(taskDraft);
-    const result = await createTask(payload);
-    setTasks((current) => [result.task, ...current]);
-    setTaskDraft({ title: "", class: taskDraft.class });
+    try {
+      const payload = normalizeTaskDraft(taskDraft);
+      const result = await createTask(payload);
+      setTasks((current) => [result.task, ...current]);
+      setTaskDraft({ title: "", class: taskDraft.class });
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
+    }
   }
 
   async function handleKindle(task) {
@@ -130,6 +144,9 @@ export function App() {
     try {
       const result = await updateTask(task.id, { status: nextKindleStatus(task) });
       setTasks((current) => replaceTask(current, result.task));
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
     } finally {
       setPendingTaskId(null);
     }
@@ -143,6 +160,9 @@ export function App() {
       if (editingTaskId === task.id) {
         setEditingTaskId(null);
       }
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
     } finally {
       setPendingTaskId(null);
     }
@@ -187,8 +207,12 @@ export function App() {
   }
 
   async function handleExport() {
-    const result = await exportMarkdown(language);
-    setNotice(formatMessage(copy.taskPane.exportDone, { filePath: result.filePath }));
+    try {
+      const result = await exportMarkdown(language);
+      setNotice(formatMessage(copy.taskPane.exportDone, { filePath: result.filePath }));
+    } catch (error) {
+      setNotice(error.message);
+    }
   }
 
   async function handleChat(event) {
@@ -232,7 +256,21 @@ export function App() {
         }
       });
     } catch (error) {
-      setNotice(error.message);
+      const message = error.message || copy.chatPane.requestFailed;
+      setNotice(message);
+      setMessages((current) => {
+        const next = [...current];
+        const last = next[next.length - 1];
+
+        if (last?.role === "assistant" && !last.content) {
+          next[next.length - 1] = {
+            ...last,
+            content: formatMessage(copy.chatPane.claudeUnavailable, { error: message })
+          };
+        }
+
+        return next;
+      });
     } finally {
       setIsChatting(false);
     }
@@ -279,6 +317,26 @@ export function App() {
         <figure className="bonfire-banner" aria-label={copy.taskPane.bannerLabel}>
           <img src={bonfireBanner} alt="" />
         </figure>
+
+        <section className="lore-ledger" aria-label={copy.lore.ledgerLabel}>
+          <div className="lore-stat">
+            <span>{copy.lore.soulsEarned}</span>
+            <strong>{soulLedger.soulsEarned.toLocaleString()}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.soulsAtRisk}</span>
+            <strong>{soulLedger.soulsAtRisk.toLocaleString()}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.humanity}</span>
+            <strong>{soulLedger.humanity}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.estus}</span>
+            <strong>{soulLedger.estusCharges}</strong>
+          </div>
+          <p>{bonfireWhisper}</p>
+        </section>
 
         <form className="quick-capture" onSubmit={handleAddTask}>
           <input

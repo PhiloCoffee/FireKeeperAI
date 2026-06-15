@@ -210,6 +210,53 @@ h2 {
   filter: saturate(0.92) contrast(1.06);
 }
 
+.lore-ledger {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: -6px 0 18px;
+}
+
+.lore-stat {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(214, 170, 99, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(37, 32, 28, 0.82), rgba(20, 17, 15, 0.88)),
+    rgba(20, 17, 15, 0.8);
+}
+
+.lore-stat span {
+  display: block;
+  margin-bottom: 4px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lore-stat strong {
+  color: #ffe0b4;
+  font-size: 1.05rem;
+}
+
+.lore-ledger p {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(233, 107, 44, 0.72);
+  border-radius: 8px;
+  background: rgba(10, 9, 8, 0.34);
+  color: #cdb89e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
 .status-pill {
   color: #c9a999;
 }
@@ -632,6 +679,10 @@ h2 {
 
   .bonfire-banner {
     height: 96px;
+  }
+
+  .lore-ledger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .fire-keeper-portrait {

@@ -13,6 +13,15 @@ const webOrigin = process.env.WEB_ORIGIN || "http://localhost:5173";
 app.use(cors({ origin: webOrigin }));
 app.use(express.json({ limit: "1mb" }));
 
+app.use((err, _req, res, next) => {
+  if (err instanceof SyntaxError && "body" in err) {
+    res.status(400).json({ error: "Invalid JSON body." });
+    return;
+  }
+
+  next(err);
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,

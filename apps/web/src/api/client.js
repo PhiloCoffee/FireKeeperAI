@@ -2,6 +2,18 @@ const JSON_HEADERS = {
   "Content-Type": "application/json"
 };
 
+async function getErrorMessage(response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const body = await response.json().catch(() => ({}));
+    return body.error || `Request failed: ${response.status}`;
+  }
+
+  const text = await response.text().catch(() => "");
+  return text || `Request failed: ${response.status}`;
+}
+
 async function request(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -12,8 +24,7 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${response.status}`);
+    throw new Error(await getErrorMessage(response));
   }
 
   if (response.status === 204) {
@@ -56,6 +67,38 @@ export function exportMarkdown(language = "en") {
   return request(`/api/export/markdown?${params.toString()}`);
 }
 
+export function parseServerSentEvent(rawEvent) {
+  let event = "message";
+  const dataLines = [];
+
+  for (const line of rawEvent.split(/\r?\n/)) {
+    if (!line || line.startsWith(":")) {
+      continue;
+    }
+
+    const separator = line.indexOf(":");
+    const field = separator === -1 ? line : line.slice(0, separator);
+    const value = separator === -1 ? "" : line.slice(separator + 1).replace(/^ /, "");
+
+    if (field === "event") {
+      event = value;
+    }
+
+    if (field === "data") {
+      dataLines.push(value);
+    }
+  }
+
+  if (!dataLines.length) {
+    return null;
+  }
+
+  return {
+    event,
+    data: JSON.parse(dataLines.join("\n"))
+  };
+}
+
 export async function streamChat({ conversationId, language = "en", message, includeOpenTasks, onMeta, onToken, onDone, onError }) {
   const response = await fetch("/api/chat/stream", {
     method: "POST",
@@ -71,13 +114,25 @@ export async function streamChat({ conversationId, language = "en", message, inc
   });
 
   if (!response.ok || !response.body) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body.error || "Chat request failed.");
+    throw new Error(response.ok ? "Chat response stream is unavailable." : await getErrorMessage(response));
   }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  const dispatchEvent = (rawEvent) => {
+    const parsed = parseServerSentEvent(rawEvent);
+    if (!parsed) {
+      return;
+    }
+
+    const { event, data } = parsed;
+
+    if (event === "meta") onMeta?.(data);
+    if (event === "token") onToken?.(data.text || "");
+    if (event === "done") onDone?.(data);
+    if (event === "error") onError?.(data.error || "Claude request failed.");
+  };
 
   while (true) {
     const { value, done } = await reader.read();
@@ -90,21 +145,12 @@ export async function streamChat({ conversationId, language = "en", message, inc
     buffer = events.pop() || "";
 
     for (const rawEvent of events) {
-      const lines = rawEvent.split("\n");
-      const eventLine = lines.find((line) => line.startsWith("event:"));
-      const dataLine = lines.find((line) => line.startsWith("data:"));
-
-      if (!eventLine || !dataLine) {
-        continue;
-      }
-
-      const event = eventLine.replace("event:", "").trim();
-      const data = JSON.parse(dataLine.replace("data:", "").trim());
-
-      if (event === "meta") onMeta?.(data);
-      if (event === "token") onToken?.(data.text || "");
-      if (event === "done") onDone?.(data);
-      if (event === "error") onError?.(data.error || "Claude request failed.");
+      dispatchEvent(rawEvent);
     }
+  }
+
+  buffer += decoder.decode();
+  if (buffer.trim()) {
+    dispatchEvent(buffer);
   }
 }

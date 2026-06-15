@@ -1,65 +1,70 @@
-# Fire Keeper AI (防火女 AI)
+# Fire Keeper AI
 
-Fire Keeper AI is a Dark Souls inspired personal task manager with an AI guidance panel. It combines a themed React interface, local task storage, Markdown export, and Claude streaming chat.
+Fire Keeper AI is a Dark Souls inspired local-first assistant for task planning, AI guidance, and Markdown export. It combines a themed React workspace, local SQLite persistence, Claude streaming chat, bilingual UI, and a small layer of bonfire-flavored task state.
 
 > May the flames guide thee.
 
-## Current Features
+## What It Does
 
-- Dual-pane web app: task ledger on the left, AI guidance on the right.
-- Task classes: Boss, Elite, Regular, Tedious.
-- Task statuses: New, Active, Blocked, Kindled.
-- Create, edit, delete, filter, and kindle tasks.
-- Claude streaming chat with current open tasks included as context.
-- Markdown export to `data/exports`.
-- One-click English / Chinese switching.
-- Local SQLite persistence under `data/firekeeper.sqlite`.
+- Capture, edit, filter, delete, and kindle tasks.
+- Classify tasks as Boss, Elite, Regular, or Tedious.
+- Track task status as New, Active, Blocked, or Kindled.
+- Show Dark Souls inspired task counters such as Souls, Humanity, Estus, and bonfire whispers.
+- Chat with Claude through a backend proxy that can include current open tasks as context.
+- Export task summaries to Markdown under `data/exports`.
+- Switch the UI between English and Simplified Chinese.
+- Use local Dark Souls inspired assets for a private fan prototype interface.
 
-## Language Support
+## Documentation
 
-The app supports one-click English and Simplified Chinese switching from the side rail.
+Project documentation is split by function under [docs/project](docs/project/README.md):
 
-- UI labels, placeholders, tooltips, task classes, and statuses switch immediately.
-- The selected language is persisted in `localStorage`.
-- Claude requests include the active language.
-- The backend switches the Claude system prompt with the UI language.
-- Open-task context sent to Claude localizes task class and status names.
-- Markdown exports use the active language for titles, sections, task classes, and empty states.
+- [Project Overview](docs/project/README.md)
+- [Task Ledger](docs/project/task-ledger.md)
+- [AI Guidance](docs/project/ai-guidance.md)
+- [Localization](docs/project/localization.md)
+- [Theme And Assets](docs/project/theme-and-assets.md)
+- [Storage And Export](docs/project/storage-and-export.md)
+- [Testing And Quality](docs/project/testing-and-quality.md)
+- [Documentation Site](docs/project/docs-site.md)
+- [Dev Log And Changelog](docs/project/dev-log.md)
 
-Chinese copy follows official Dark Souls style terminology:
-
-- Fire Keeper: 防火女
-- Bonfire: 篝火
-- Covenant: 誓约
+Design history and planning notes live under [docs/design](docs/design).
 
 ## Tech Stack
 
 - Frontend: React 19, Vite, CSS, lucide-react
 - Backend: Express 5, Claude API via `@anthropic-ai/sdk`
-- Storage: Node SQLite (`node:sqlite`)
+- Storage: Node SQLite through `node:sqlite`
 - Runtime data: local `data/` directory
+- Tests: Node built-in `node:test`
 
 ## Project Structure
 
 ```text
 FireKeeperAI/
-├─ apps/
-│  ├─ api/
-│  │  └─ src/
-│  │     ├─ db/
-│  │     ├─ routes/
-│  │     └─ services/
-│  └─ web/
-│     ├─ src/
-│     │  ├─ api/
-│     │  ├─ assets/
-│     │  ├─ App.jsx
-│     │  ├─ i18n.js
-│     │  └─ taskLogic.js
-│     └─ test/
-├─ data/
-├─ docs/
-└─ package.json
+  apps/
+    api/
+      src/
+        db/
+        routes/
+        services/
+      test/
+    web/
+      src/
+        api/
+        assets/
+        App.jsx
+        i18n.js
+        taskLogic.js
+      test/
+  data/
+    exports/
+    firekeeper.sqlite
+  docs/
+    design/
+    project/
+  package.json
 ```
 
 ## Setup
@@ -83,12 +88,12 @@ WEB_ORIGIN=http://localhost:5173
 npm run dev
 ```
 
-The default URLs are:
+Default URLs:
 
 - Web: `http://localhost:5173`
 - API: `http://localhost:8787`
 
-On Windows PowerShell, if script execution policy blocks `npm`, use `npm.cmd`:
+On Windows PowerShell, if execution policy blocks `npm`, use `npm.cmd`:
 
 ```bash
 npm.cmd run dev
@@ -101,7 +106,11 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Current test coverage includes task filtering/counting logic, language fallback/formatting, and localized Claude task context.
+Current test coverage includes task filtering/counting logic, Dark Souls flavored task counters, API client event parsing, task input validation, language fallback/formatting, and localized Claude task context.
+
+## Asset Notice
+
+Some current Dark Souls and Fire Keeper visual assets are copyrighted game or fan content. They are intended for local/private fan prototyping only. Replace them with original or properly licensed art before public release.
 
 ## Original Soul
 

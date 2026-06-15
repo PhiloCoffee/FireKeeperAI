@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { db, nowIso, parseJson } from "../db/database.js";
-
-const TASK_CLASSES = new Set(["boss", "elite", "regular", "tedious"]);
-const TASK_STATUSES = new Set(["new", "active", "blocked", "kindled"]);
+import {
+  TASK_CLASSES,
+  TASK_STATUSES,
+  defaultPriorityForClass,
+  normalizePriority,
+  normalizeTags,
+  normalizeTitle
+} from "./taskValidation.js";
 
 function rowToTask(row) {
   return {
@@ -13,7 +18,7 @@ function rowToTask(row) {
     class: row.class,
     priority: row.priority,
     dueAt: row.dueAt,
-    tags: parseJson(row.tags, []),
+    tags: normalizeTags(parseJson(row.tags, [])),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     completedAt: row.completedAt
@@ -42,23 +47,25 @@ export function listTasks(filters = {}) {
   return rows.map(rowToTask);
 }
 
-export function createTask(input) {
+export function createTask(input = {}) {
   const timestamp = nowIso();
   const id = randomUUID();
   const taskClass = TASK_CLASSES.has(input.class) ? input.class : "regular";
   const status = TASK_STATUSES.has(input.status) ? input.status : "new";
-  const tags = Array.isArray(input.tags) ? input.tags : [];
+  const tags = normalizeTags(input.tags);
+  const title = normalizeTitle(input.title);
+  const priority = normalizePriority(input.priority, defaultPriorityForClass(taskClass));
 
   db.prepare(`
     INSERT INTO tasks (id, title, description, status, class, priority, dueAt, tags, createdAt, updatedAt, completedAt)
     VALUES ($id, $title, $description, $status, $class, $priority, $dueAt, $tags, $createdAt, $updatedAt, $completedAt)
   `).run({
     $id: id,
-    $title: String(input.title || "").trim(),
+    $title: title,
     $description: String(input.description || "").trim(),
     $status: status,
     $class: taskClass,
-    $priority: Number(input.priority || 2),
+    $priority: priority,
     $dueAt: input.dueAt || null,
     $tags: JSON.stringify(tags),
     $createdAt: timestamp,
@@ -74,7 +81,7 @@ export function getTask(id) {
   return row ? rowToTask(row) : null;
 }
 
-export function updateTask(id, input) {
+export function updateTask(id, input = {}) {
   const existing = getTask(id);
   if (!existing) {
     return null;
@@ -84,6 +91,9 @@ export function updateTask(id, input) {
   const nextClass = input.class && TASK_CLASSES.has(input.class) ? input.class : existing.class;
   const completedAt = nextStatus === "kindled" ? existing.completedAt || nowIso() : null;
   const updatedAt = nowIso();
+  const title = input.title === undefined ? existing.title : normalizeTitle(input.title);
+  const tags = input.tags === undefined ? existing.tags : normalizeTags(input.tags);
+  const priority = input.priority === undefined ? existing.priority : normalizePriority(input.priority, existing.priority);
 
   db.prepare(`
     UPDATE tasks
@@ -99,13 +109,13 @@ export function updateTask(id, input) {
     WHERE id = $id
   `).run({
     $id: id,
-    $title: input.title === undefined ? existing.title : String(input.title).trim(),
+    $title: title,
     $description: input.description === undefined ? existing.description : String(input.description).trim(),
     $status: nextStatus,
     $class: nextClass,
-    $priority: input.priority === undefined ? existing.priority : Number(input.priority),
+    $priority: priority,
     $dueAt: input.dueAt === undefined ? existing.dueAt : input.dueAt || null,
-    $tags: input.tags === undefined ? JSON.stringify(existing.tags) : JSON.stringify(input.tags || []),
+    $tags: JSON.stringify(tags),
     $updatedAt: updatedAt,
     $completedAt: completedAt
   });
