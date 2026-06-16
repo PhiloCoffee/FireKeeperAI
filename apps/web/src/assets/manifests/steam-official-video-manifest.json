@@ -1,0 +1,59 @@
+[
+  {
+    "id": "ds3-preorder-trailer",
+    "title": "Dark Souls III - Pre-Order trailer (EN-ESRB)",
+    "titleZh": "《黑暗之魂 III》预购预告片（英文 ESRB）",
+    "sourcePage": "https://store.steampowered.com/app/374320/DARK_SOULS_III/",
+    "sourceThumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/256659154/movie.293x165.jpg?t=1700587333",
+    "sourceHls": "https://video.akamai.steamstatic.com/store_trailers/374320/48797/e6075d14ad252fe2660a62e7c8b7eaf0afa64096/1750520094/hls_264_master.m3u8?t=1700587333",
+    "localPoster": "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-poster.jpg",
+    "localHlsManifest": "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls-master.m3u8",
+    "localVariantManifests": [
+      "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls_264_4_audio.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls_264_0_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls_264_1_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls_264_2_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-preorder-trailer-hls_264_3_video.m3u8"
+    ],
+    "legalNotice": "DARK SOULS(R) III & (C)BANDAI NAMCO Entertainment Inc. / (C)2011-2016 FromSoftware, Inc.",
+    "usageNote": "Official Steam store trailer assets. Downloaded poster and HLS master manifest only; use for local fan prototype unless licensed."
+  },
+  {
+    "id": "ds3-the-movie",
+    "title": "DS3 _ The Movie (EN-ESRB)",
+    "titleZh": "《黑暗之魂 III》电影式预告（英文 ESRB）",
+    "sourcePage": "https://store.steampowered.com/app/374320/DARK_SOULS_III/",
+    "sourceThumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/256662354/movie.293x165.jpg?t=1700587383",
+    "sourceHls": "https://video.akamai.steamstatic.com/store_trailers/374320/55427/16e21902f35c1a672b19ac4668ac02c76317f58d/1750520163/hls_264_master.m3u8?t=1700587383",
+    "localPoster": "apps/web/src/assets/official/steam-videos/ds3-the-movie-poster.jpg",
+    "localHlsManifest": "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls-master.m3u8",
+    "localVariantManifests": [
+      "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls_264_4_audio.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls_264_0_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls_264_1_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls_264_2_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/ds3-the-movie-hls_264_3_video.m3u8"
+    ],
+    "legalNotice": "DARK SOULS(R) III & (C)BANDAI NAMCO Entertainment Inc. / (C)2011-2016 FromSoftware, Inc.",
+    "usageNote": "Official Steam store trailer assets. Downloaded poster and HLS master manifest only; use for local fan prototype unless licensed."
+  },
+  {
+    "id": "dsr-launch-trailer",
+    "title": "DARK SOULS: REMASTERED - Launch Trailer",
+    "titleZh": "《黑暗之魂：重制版》发售预告片",
+    "sourcePage": "https://store.steampowered.com/app/570940/DARK_SOULS_REMASTERED/",
+    "sourceThumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257244237/14d7b9caf0961fe394903fdbe7b5d7aa3d2cc6bd/movie_600x337.jpg?t=1764975650",
+    "sourceHls": "https://video.akamai.steamstatic.com/store_trailers/570940/630464638/1e50fce9cb5c144f01d5ca9ba26f67edd159ee69/1764973946/hls_264_master.m3u8?t=1764975650",
+    "localPoster": "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-poster.jpg",
+    "localHlsManifest": "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls-master.m3u8",
+    "localVariantManifests": [
+      "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls_264_4_audio.m3u8",
+      "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls_264_0_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls_264_1_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls_264_2_video.m3u8",
+      "apps/web/src/assets/official/steam-videos/dsr-launch-trailer-hls_264_3_video.m3u8"
+    ],
+    "legalNotice": "Dark Souls(TM): Remastered & (C)BANDAI NAMCO Entertainment Inc. / (C)2011-2018 FromSoftware, Inc.",
+    "usageNote": "Official Steam store trailer assets. Downloaded poster and HLS master manifest only; use for local fan prototype unless licensed."
+  }
+]

@@ -8,7 +8,7 @@
     "apps/web"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c amber,red \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "dev": "node ./node_modules/concurrently/dist/bin/concurrently.js -n api,web -c amber,red \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
     "build": "npm run build -w apps/web",

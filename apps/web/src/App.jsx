@@ -9,6 +9,7 @@ import {
   Plus,
   ScrollText,
   ShieldAlert,
+  Sparkles,
   Swords,
   Trash2,
   X
@@ -22,8 +23,14 @@ import {
   streamChat,
   updateTask
 } from "./api/client.js";
-import fireKeeperArt from "./assets/char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg";
-import bonfireBanner from "./assets/object/bonfire/bg-bonfire-ruins-cropped-banner.jpg";
+import {
+  getMediaById,
+  getModeById,
+  getNextModeId,
+  getPersonaById,
+  INTERACTION_MODES,
+  PERSONA_TEMPLATES
+} from "./personaTemplates.js";
 import {
   LANGUAGE_OPTIONS,
   TRANSLATIONS,
@@ -48,6 +55,8 @@ export function App() {
   const [language, setLanguage] = useState(getStoredLanguage);
   const [health, setHealth] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [selectedPersonaId, setSelectedPersonaId] = useState("fire-keeper");
+  const [selectedModeId, setSelectedModeId] = useState("ledger");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [taskDraft, setTaskDraft] = useState({ title: "", class: "regular" });
@@ -85,6 +94,18 @@ export function App() {
     }));
   }, [copy]);
 
+  const activePersona = useMemo(() => getPersonaById(selectedPersonaId), [selectedPersonaId]);
+  const activeMode = useMemo(() => getModeById(selectedModeId), [selectedModeId]);
+  const activeMedia = useMemo(() => getMediaById(activePersona.mediaId), [activePersona]);
+  const isChinese = language === "zh";
+  const personaName = isChinese ? activePersona.nameZh : activePersona.name;
+  const personaAltName = isChinese ? activePersona.name : activePersona.nameZh;
+  const activeModeLabel = isChinese ? activeMode.labelZh : activeMode.label;
+  const personaIntro = activePersona.intro[language] || activePersona.intro.en;
+  const capturePlaceholder = isChinese ? activePersona.capturePlaceholderZh : activePersona.capturePlaceholder;
+  const chatPlaceholder = isChinese ? activePersona.chatPlaceholderZh : activePersona.chatPlaceholder;
+  const officialReference = isChinese ? activePersona.officialReferenceZh : activePersona.officialReference;
+
   async function refreshTasks() {
     const result = await getTasks();
     setTasks(result.tasks);
@@ -101,11 +122,34 @@ export function App() {
     document.title = copy.appTitle;
     setMessages((current) => {
       if (current.length === 1 && current[0].isSystemGreeting) {
-        return [{ ...current[0], content: copy.initialAssistantMessage }];
+        return [{ ...current[0], content: personaIntro }];
       }
       return current;
     });
-  }, [copy, currentLanguage.htmlLang, language]);
+  }, [copy.appTitle, currentLanguage.htmlLang, language, personaIntro]);
+
+  useEffect(() => {
+    setMessages([
+      {
+        role: "assistant",
+        content: personaIntro,
+        isSystemGreeting: true
+      }
+    ]);
+    setConversationId(null);
+  }, [selectedPersonaId]);
+
+  useEffect(() => {
+    function handleShortcut(event) {
+      if (event.key === "Tab" && event.ctrlKey) {
+        event.preventDefault();
+        setSelectedModeId((current) => getNextModeId(current, event.shiftKey ? -1 : 1));
+      }
+    }
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, []);
 
   const visibleTasks = useMemo(() => {
     return filterTasks(tasks, { selectedClass, selectedStatus });
@@ -277,7 +321,13 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main
+      className={`app-shell persona-${activePersona.id} mode-${activeMode.id}`}
+      style={{
+        "--persona-scene": `url(${activePersona.scene})`,
+        "--persona-accent": activePersona.accent
+      }}
+    >
       <aside className="side-rail" aria-label={copy.navLabel}>
         <div className="brand-mark" title={copy.appTitle}>
           <Flame size={26} />
@@ -306,7 +356,10 @@ export function App() {
         <header className="pane-header">
           <div>
             <p className="eyebrow">{copy.taskPane.eyebrow}</p>
-            <h1>{copy.taskPane.title}</h1>
+            <h1>{personaName}</h1>
+            <p className="persona-subtitle">
+              {personaAltName} · {activeModeLabel}
+            </p>
           </div>
           <div className="kindled-count">
             <Flame size={18} />
@@ -314,8 +367,48 @@ export function App() {
           </div>
         </header>
 
+        <section className="persona-switcher" aria-label={isChinese ? "角色模板" : "Character templates"}>
+          {PERSONA_TEMPLATES.map((persona) => {
+            const displayName = isChinese ? persona.nameZh : persona.name;
+            const secondaryName = isChinese ? persona.name : persona.nameZh;
+
+            return (
+              <button
+                key={persona.id}
+                className={persona.id === activePersona.id ? "selected" : ""}
+                onClick={() => setSelectedPersonaId(persona.id)}
+                style={{ "--swatch": persona.accent }}
+                title={`${persona.name} / ${persona.nameZh}`}
+              >
+                <span>{persona.mark}</span>
+                <strong>{displayName}</strong>
+                <small>{secondaryName}</small>
+              </button>
+            );
+          })}
+        </section>
+
+        <section className="mode-tabs" aria-label={isChinese ? "交互模式" : "Interaction modes"}>
+          {INTERACTION_MODES.map((mode) => {
+            const displayLabel = isChinese ? mode.labelZh : mode.label;
+            const secondaryLabel = isChinese ? mode.label : mode.labelZh;
+
+            return (
+              <button
+                key={mode.id}
+                className={mode.id === activeMode.id ? "selected" : ""}
+                onClick={() => setSelectedModeId(mode.id)}
+                title={`${mode.hint} / ${mode.hintZh}`}
+              >
+                <span>{displayLabel}</span>
+                <small>{secondaryLabel}</small>
+              </button>
+            );
+          })}
+        </section>
+
         <figure className="bonfire-banner" aria-label={copy.taskPane.bannerLabel}>
-          <img src={bonfireBanner} alt="" />
+          <img src={activePersona.banner} alt="" />
         </figure>
 
         <section className="lore-ledger" aria-label={copy.lore.ledgerLabel}>
@@ -342,7 +435,7 @@ export function App() {
           <input
             value={taskDraft.title}
             onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
-            placeholder={copy.taskPane.capturePlaceholder}
+            placeholder={capturePlaceholder || copy.taskPane.capturePlaceholder}
             aria-label={copy.taskPane.taskTitleLabel}
           />
           <select
@@ -389,6 +482,23 @@ export function App() {
           ))}
         </nav>
 
+        {activeMode.id === "ritual" ? (
+          <section className="ritual-panel" aria-label={isChinese ? "角色工作模板" : "Role working template"}>
+            <div>
+              <p className="eyebrow">{isChinese ? "交互模板" : "Interactive Template"}</p>
+              <h2>{isChinese ? `${personaName}的三步仪式` : `${personaName}'s three-step ritual`}</h2>
+            </div>
+            <ol>
+              {activePersona.ritual.map(([en, zh]) => (
+                <li key={en}>
+                  <span>{isChinese ? zh : en}</span>
+                  <small>{isChinese ? en : zh}</small>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
         <div className="task-list">
           {visibleTasks.length === 0 ? (
             <div className="empty-state">
@@ -423,24 +533,54 @@ export function App() {
           <span />
           <span />
         </div>
-        <div className="fire-keeper-portrait" aria-hidden="true">
-          <img src={fireKeeperArt} alt="" />
-        </div>
+        {activePersona.portrait ? (
+          <div className="fire-keeper-portrait" aria-hidden="true">
+            <img src={activePersona.portrait} alt="" />
+          </div>
+        ) : (
+          <div className="persona-sigil" aria-hidden="true">
+            {activePersona.mark}
+          </div>
+        )}
 
         <header className="pane-header chat-header">
           <div>
-            <p className="eyebrow">{copy.chatPane.eyebrow}</p>
-            <h2>{copy.chatPane.title}</h2>
+            <p className="eyebrow">
+              {copy.chatPane.eyebrow} · {activeModeLabel}
+            </p>
+            <h2>{personaAltName}</h2>
+            <p className="persona-copy">{personaIntro}</p>
           </div>
           <div className={health?.claudeConfigured ? "status-pill ready" : "status-pill"}>
             {health?.claudeConfigured ? copy.chatPane.ready : copy.chatPane.apiKeyNeeded}
           </div>
         </header>
 
+        {activeMode.id === "archive" ? (
+          <section className="media-panel" aria-label={isChinese ? "官方媒体参考" : "Official media references"}>
+            <div>
+              <p className="eyebrow">{isChinese ? "官方参考" : "Official Reference"}</p>
+              <h2>{isChinese ? activeMedia.titleZh : activeMedia.title}</h2>
+              <p>{officialReference}</p>
+            </div>
+            <div className="media-card">
+              <img src={activeMedia.localPoster || activeMedia.thumbnail} alt="" />
+              <a href={activeMedia.sourcePage} target="_blank" rel="noreferrer">
+                <Sparkles size={16} />
+                Steam source
+              </a>
+              <a href={activeMedia.localHls || activeMedia.hls} target="_blank" rel="noreferrer">
+                <ScrollText size={16} />
+                HLS manifest
+              </a>
+            </div>
+          </section>
+        ) : null}
+
         <div className="message-stack" aria-live="polite">
           {messages.map((message, index) => (
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-              <span>{message.role === "assistant" ? copy.chatPane.assistantName : copy.chatPane.userName}</span>
+              <span>{message.role === "assistant" ? personaName : copy.chatPane.userName}</span>
               <p>{message.content || (isChatting ? copy.chatPane.loading : "")}</p>
             </article>
           ))}
@@ -452,7 +592,7 @@ export function App() {
           <textarea
             value={chatDraft}
             onChange={(event) => setChatDraft(event.target.value)}
-            placeholder={copy.chatPane.placeholder}
+            placeholder={chatPlaceholder || copy.chatPane.placeholder}
             aria-label={copy.nav.chat}
             rows={3}
           />
