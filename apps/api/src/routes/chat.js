@@ -1,6 +1,7 @@
 import express from "express";
 import { buildTaskContext, streamClaudeResponse } from "../services/claudeService.js";
 import { ensureConversation, getMessages, saveMessage } from "../services/conversationService.js";
+import { normalizeLanguage } from "../services/i18nService.js";
 import { listTasks } from "../services/taskService.js";
 
 export const chatRouter = express.Router();
@@ -32,10 +33,12 @@ chatRouter.post("/stream", async (req, res) => {
       role: message.role,
       content: message.content
     }));
-    const taskContext = buildTaskContext(req.body?.context?.includeOpenTasks ? listTasks() : []);
+    const language = normalizeLanguage(req.body?.context?.language);
+    const taskContext = buildTaskContext(req.body?.context?.includeOpenTasks ? listTasks() : [], language);
     let usage = {};
 
     const assistantText = await streamClaudeResponse({
+      language,
       messages: history,
       taskContext,
       onText: (text) => send("token", { text }),

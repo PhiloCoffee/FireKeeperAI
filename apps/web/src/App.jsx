@@ -3,6 +3,7 @@ import {
   Check,
   Edit3,
   Flame,
+  Languages,
   Loader2,
   MessageSquareText,
   Plus,
@@ -31,11 +32,19 @@ import {
   PERSONA_TEMPLATES
 } from "./personaTemplates.js";
 import {
+  LANGUAGE_OPTIONS,
+  TRANSLATIONS,
+  formatMessage,
+  getStoredLanguage
+} from "./i18n.js";
+import {
   CLASS_OPTIONS,
   STATUS_LABELS,
   STATUS_OPTIONS,
+  calculateSoulLedger,
   countTasks,
   filterTasks,
+  getBonfireWhisper,
   nextKindleStatus,
   normalizeTaskDraft,
   removeTask,
@@ -43,6 +52,7 @@ import {
 } from "./taskLogic.js";
 
 export function App() {
+  const [language, setLanguage] = useState(getStoredLanguage);
   const [health, setHealth] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [selectedPersonaId, setSelectedPersonaId] = useState("fire-keeper");
@@ -53,20 +63,48 @@ export function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editDraft, setEditDraft] = useState({ title: "", class: "regular", status: "active" });
   const [pendingTaskId, setPendingTaskId] = useState(null);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState(() => [
     {
       role: "assistant",
-      content: "The bonfire is lit. Tell me what weighs on your quest, or capture the next task."
+      content: TRANSLATIONS[getStoredLanguage()].initialAssistantMessage,
+      isSystemGreeting: true
     }
   ]);
   const [conversationId, setConversationId] = useState(null);
   const [chatDraft, setChatDraft] = useState("");
   const [isChatting, setIsChatting] = useState(false);
   const [notice, setNotice] = useState("");
+  const copy = TRANSLATIONS[language];
+  const nextLanguage = language === "en" ? "zh" : "en";
+  const currentLanguage = LANGUAGE_OPTIONS[language];
+  const nextLanguageOption = LANGUAGE_OPTIONS[nextLanguage];
+
+  const classOptions = useMemo(() => {
+    return CLASS_OPTIONS.map((option) => ({
+      ...option,
+      label: copy.classLabels[option.value],
+      hint: copy.classHints[option.value]
+    }));
+  }, [copy]);
+
+  const statusOptions = useMemo(() => {
+    return STATUS_OPTIONS.map((option) => ({
+      ...option,
+      label: copy.statusFilterLabels[option.value]
+    }));
+  }, [copy]);
 
   const activePersona = useMemo(() => getPersonaById(selectedPersonaId), [selectedPersonaId]);
   const activeMode = useMemo(() => getModeById(selectedModeId), [selectedModeId]);
   const activeMedia = useMemo(() => getMediaById(activePersona.mediaId), [activePersona]);
+  const isChinese = language === "zh";
+  const personaName = isChinese ? activePersona.nameZh : activePersona.name;
+  const personaAltName = isChinese ? activePersona.name : activePersona.nameZh;
+  const activeModeLabel = isChinese ? activeMode.labelZh : activeMode.label;
+  const personaIntro = activePersona.intro[language] || activePersona.intro.en;
+  const capturePlaceholder = isChinese ? activePersona.capturePlaceholderZh : activePersona.capturePlaceholder;
+  const chatPlaceholder = isChinese ? activePersona.chatPlaceholderZh : activePersona.chatPlaceholder;
+  const officialReference = isChinese ? activePersona.officialReferenceZh : activePersona.officialReference;
 
   async function refreshTasks() {
     const result = await getTasks();
@@ -79,14 +117,27 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    window.localStorage.setItem("firekeeper-language", language);
+    document.documentElement.lang = currentLanguage.htmlLang;
+    document.title = copy.appTitle;
+    setMessages((current) => {
+      if (current.length === 1 && current[0].isSystemGreeting) {
+        return [{ ...current[0], content: personaIntro }];
+      }
+      return current;
+    });
+  }, [copy.appTitle, currentLanguage.htmlLang, language, personaIntro]);
+
+  useEffect(() => {
     setMessages([
       {
         role: "assistant",
-        content: `${activePersona.intro.en}\n\n${activePersona.intro.zh}`
+        content: personaIntro,
+        isSystemGreeting: true
       }
     ]);
     setConversationId(null);
-  }, [activePersona]);
+  }, [selectedPersonaId]);
 
   useEffect(() => {
     function handleShortcut(event) {
@@ -108,16 +159,28 @@ export function App() {
     return countTasks(tasks);
   }, [tasks]);
 
+  const soulLedger = useMemo(() => {
+    return calculateSoulLedger(tasks);
+  }, [tasks]);
+
+  const bonfireWhisper = copy.bonfireWhispers[getBonfireWhisper(tasks)];
+
   async function handleAddTask(event) {
     event.preventDefault();
     if (!taskDraft.title.trim()) {
+      setNotice(copy.taskPane.titleRequired);
       return;
     }
 
-    const payload = normalizeTaskDraft(taskDraft);
-    const result = await createTask(payload);
-    setTasks((current) => [result.task, ...current]);
-    setTaskDraft({ title: "", class: taskDraft.class });
+    try {
+      const payload = normalizeTaskDraft(taskDraft);
+      const result = await createTask(payload);
+      setTasks((current) => [result.task, ...current]);
+      setTaskDraft({ title: "", class: taskDraft.class });
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
+    }
   }
 
   async function handleKindle(task) {
@@ -125,6 +188,9 @@ export function App() {
     try {
       const result = await updateTask(task.id, { status: nextKindleStatus(task) });
       setTasks((current) => replaceTask(current, result.task));
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
     } finally {
       setPendingTaskId(null);
     }
@@ -138,6 +204,9 @@ export function App() {
       if (editingTaskId === task.id) {
         setEditingTaskId(null);
       }
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
     } finally {
       setPendingTaskId(null);
     }
@@ -160,7 +229,7 @@ export function App() {
   async function handleSaveEdit(task) {
     const title = editDraft.title.trim();
     if (!title) {
-      setNotice("Task title is required.");
+      setNotice(copy.taskPane.titleRequired);
       return;
     }
 
@@ -182,8 +251,12 @@ export function App() {
   }
 
   async function handleExport() {
-    const result = await exportMarkdown();
-    setNotice(`Markdown export written: ${result.filePath}`);
+    try {
+      const result = await exportMarkdown(language);
+      setNotice(formatMessage(copy.taskPane.exportDone, { filePath: result.filePath }));
+    } catch (error) {
+      setNotice(error.message);
+    }
   }
 
   async function handleChat(event) {
@@ -201,6 +274,7 @@ export function App() {
     try {
       await streamChat({
         conversationId,
+        language,
         message: text,
         includeOpenTasks: true,
         onMeta: (data) => setConversationId(data.conversationId),
@@ -219,14 +293,28 @@ export function App() {
             const last = next[next.length - 1];
             next[next.length - 1] = {
               ...last,
-              content: last.content || `Claude is unavailable: ${error}`
+              content: last.content || formatMessage(copy.chatPane.claudeUnavailable, { error })
             };
             return next;
           });
         }
       });
     } catch (error) {
-      setNotice(error.message);
+      const message = error.message || copy.chatPane.requestFailed;
+      setNotice(message);
+      setMessages((current) => {
+        const next = [...current];
+        const last = next[next.length - 1];
+
+        if (last?.role === "assistant" && !last.content) {
+          next[next.length - 1] = {
+            ...last,
+            content: formatMessage(copy.chatPane.claudeUnavailable, { error: message })
+          };
+        }
+
+        return next;
+      });
     } finally {
       setIsChatting(false);
     }
@@ -240,17 +328,26 @@ export function App() {
         "--persona-accent": activePersona.accent
       }}
     >
-      <aside className="side-rail" aria-label="Fire Keeper navigation">
-        <div className="brand-mark" title="Fire Keeper AI">
+      <aside className="side-rail" aria-label={copy.navLabel}>
+        <div className="brand-mark" title={copy.appTitle}>
           <Flame size={26} />
         </div>
-        <button className="rail-button active" title="Tasks">
+        <button
+          className="rail-button language-toggle"
+          title={copy.language.toggleTitle}
+          aria-label={copy.language.ariaLabel}
+          onClick={() => setLanguage(nextLanguage)}
+        >
+          <Languages size={17} />
+          <span>{nextLanguageOption.switchLabel}</span>
+        </button>
+        <button className="rail-button active" title={copy.nav.tasks}>
           <Swords size={20} />
         </button>
-        <button className="rail-button" title="Chat">
+        <button className="rail-button" title={copy.nav.chat}>
           <MessageSquareText size={20} />
         </button>
-        <button className="rail-button" title="Export" onClick={handleExport}>
+        <button className="rail-button" title={copy.nav.export} onClick={handleExport}>
           <ScrollText size={20} />
         </button>
       </aside>
@@ -258,9 +355,11 @@ export function App() {
       <section className="task-pane">
         <header className="pane-header">
           <div>
-            <p className="eyebrow">Fire Keeper AI / 模板化角色</p>
-            <h1>{activePersona.nameZh}</h1>
-            <p className="persona-subtitle">{activePersona.name} · {activeMode.labelZh}</p>
+            <p className="eyebrow">{copy.taskPane.eyebrow}</p>
+            <h1>{personaName}</h1>
+            <p className="persona-subtitle">
+              {personaAltName} · {activeModeLabel}
+            </p>
           </div>
           <div className="kindled-count">
             <Flame size={18} />
@@ -268,68 +367,98 @@ export function App() {
           </div>
         </header>
 
-        <section className="persona-switcher" aria-label="Character templates">
-          {PERSONA_TEMPLATES.map((persona) => (
-            <button
-              key={persona.id}
-              className={persona.id === activePersona.id ? "selected" : ""}
-              onClick={() => setSelectedPersonaId(persona.id)}
-              style={{ "--swatch": persona.accent }}
-              title={`${persona.name} / ${persona.nameZh}`}
-            >
-              <span>{persona.mark}</span>
-              <strong>{persona.nameZh}</strong>
-              <small>{persona.name}</small>
-            </button>
-          ))}
+        <section className="persona-switcher" aria-label={isChinese ? "角色模板" : "Character templates"}>
+          {PERSONA_TEMPLATES.map((persona) => {
+            const displayName = isChinese ? persona.nameZh : persona.name;
+            const secondaryName = isChinese ? persona.name : persona.nameZh;
+
+            return (
+              <button
+                key={persona.id}
+                className={persona.id === activePersona.id ? "selected" : ""}
+                onClick={() => setSelectedPersonaId(persona.id)}
+                style={{ "--swatch": persona.accent }}
+                title={`${persona.name} / ${persona.nameZh}`}
+              >
+                <span>{persona.mark}</span>
+                <strong>{displayName}</strong>
+                <small>{secondaryName}</small>
+              </button>
+            );
+          })}
         </section>
 
-        <section className="mode-tabs" aria-label="Interaction modes">
-          {INTERACTION_MODES.map((mode) => (
-            <button
-              key={mode.id}
-              className={mode.id === activeMode.id ? "selected" : ""}
-              onClick={() => setSelectedModeId(mode.id)}
-              title={`${mode.hint} / ${mode.hintZh}`}
-            >
-              <span>{mode.labelZh}</span>
-              <small>{mode.label}</small>
-            </button>
-          ))}
+        <section className="mode-tabs" aria-label={isChinese ? "交互模式" : "Interaction modes"}>
+          {INTERACTION_MODES.map((mode) => {
+            const displayLabel = isChinese ? mode.labelZh : mode.label;
+            const secondaryLabel = isChinese ? mode.label : mode.labelZh;
+
+            return (
+              <button
+                key={mode.id}
+                className={mode.id === activeMode.id ? "selected" : ""}
+                onClick={() => setSelectedModeId(mode.id)}
+                title={`${mode.hint} / ${mode.hintZh}`}
+              >
+                <span>{displayLabel}</span>
+                <small>{secondaryLabel}</small>
+              </button>
+            );
+          })}
         </section>
 
-        <figure className="bonfire-banner" aria-label="Bonfire rest point">
+        <figure className="bonfire-banner" aria-label={copy.taskPane.bannerLabel}>
           <img src={activePersona.banner} alt="" />
         </figure>
+
+        <section className="lore-ledger" aria-label={copy.lore.ledgerLabel}>
+          <div className="lore-stat">
+            <span>{copy.lore.soulsEarned}</span>
+            <strong>{soulLedger.soulsEarned.toLocaleString()}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.soulsAtRisk}</span>
+            <strong>{soulLedger.soulsAtRisk.toLocaleString()}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.humanity}</span>
+            <strong>{soulLedger.humanity}</strong>
+          </div>
+          <div className="lore-stat">
+            <span>{copy.lore.estus}</span>
+            <strong>{soulLedger.estusCharges}</strong>
+          </div>
+          <p>{bonfireWhisper}</p>
+        </section>
 
         <form className="quick-capture" onSubmit={handleAddTask}>
           <input
             value={taskDraft.title}
             onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
-            placeholder={`${activePersona.capturePlaceholder} / ${activePersona.capturePlaceholderZh}`}
-            aria-label="Task title"
+            placeholder={capturePlaceholder || copy.taskPane.capturePlaceholder}
+            aria-label={copy.taskPane.taskTitleLabel}
           />
           <select
             value={taskDraft.class}
             onChange={(event) => setTaskDraft((current) => ({ ...current, class: event.target.value }))}
-            aria-label="Task class"
+            aria-label={copy.taskPane.taskClassLabel}
           >
-            {CLASS_OPTIONS.map((option) => (
+            {classOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
-          <button type="submit" className="icon-command" title="Add task">
+          <button type="submit" className="icon-command" title={copy.taskPane.addTaskTitle}>
             <Plus size={18} />
           </button>
         </form>
 
-        <nav className="class-filters" aria-label="Task filters">
+        <nav className="class-filters" aria-label={copy.taskPane.classFiltersLabel}>
           <button className={selectedClass === "all" ? "selected" : ""} onClick={() => setSelectedClass("all")}>
-            All <span>{counts.all}</span>
+            {copy.statusFilterLabels.all} <span>{counts.all}</span>
           </button>
-          {CLASS_OPTIONS.map((option) => (
+          {classOptions.map((option) => (
             <button
               key={option.value}
               className={selectedClass === option.value ? "selected" : ""}
@@ -341,8 +470,8 @@ export function App() {
           ))}
         </nav>
 
-        <nav className="status-filters" aria-label="Status filters">
-          {STATUS_OPTIONS.map((option) => (
+        <nav className="status-filters" aria-label={copy.taskPane.statusFiltersLabel}>
+          {statusOptions.map((option) => (
             <button
               key={option.value}
               className={selectedStatus === option.value ? "selected" : ""}
@@ -354,16 +483,16 @@ export function App() {
         </nav>
 
         {activeMode.id === "ritual" ? (
-          <section className="ritual-panel" aria-label="Role working template">
+          <section className="ritual-panel" aria-label={isChinese ? "角色工作模板" : "Role working template"}>
             <div>
-              <p className="eyebrow">Interactive Template / 交互模板</p>
-              <h2>{activePersona.nameZh}的三步仪式</h2>
+              <p className="eyebrow">{isChinese ? "交互模板" : "Interactive Template"}</p>
+              <h2>{isChinese ? `${personaName}的三步仪式` : `${personaName}'s three-step ritual`}</h2>
             </div>
             <ol>
               {activePersona.ritual.map(([en, zh]) => (
                 <li key={en}>
-                  <span>{zh}</span>
-                  <small>{en}</small>
+                  <span>{isChinese ? zh : en}</span>
+                  <small>{isChinese ? en : zh}</small>
                 </li>
               ))}
             </ol>
@@ -374,7 +503,7 @@ export function App() {
           {visibleTasks.length === 0 ? (
             <div className="empty-state">
               <ShieldAlert size={22} />
-              <span>No tasks in this covenant.</span>
+              <span>{copy.taskPane.empty}</span>
             </div>
           ) : (
             visibleTasks.map((task) => (
@@ -384,6 +513,8 @@ export function App() {
                 editDraft={editDraft}
                 isEditing={editingTaskId === task.id}
                 isPending={pendingTaskId === task.id}
+                classOptions={classOptions}
+                copy={copy}
                 onCancelEdit={handleCancelEdit}
                 onChangeEditDraft={setEditDraft}
                 onDelete={handleDelete}
@@ -414,21 +545,23 @@ export function App() {
 
         <header className="pane-header chat-header">
           <div>
-            <p className="eyebrow">Claude API · {activeMode.label} / {activeMode.labelZh}</p>
-            <h2>{activePersona.name}</h2>
-            <p className="persona-copy">{activePersona.intro.zh}</p>
+            <p className="eyebrow">
+              {copy.chatPane.eyebrow} · {activeModeLabel}
+            </p>
+            <h2>{personaAltName}</h2>
+            <p className="persona-copy">{personaIntro}</p>
           </div>
           <div className={health?.claudeConfigured ? "status-pill ready" : "status-pill"}>
-            {health?.claudeConfigured ? "Claude ready" : "API key needed"}
+            {health?.claudeConfigured ? copy.chatPane.ready : copy.chatPane.apiKeyNeeded}
           </div>
         </header>
 
         {activeMode.id === "archive" ? (
-          <section className="media-panel" aria-label="Official media references">
+          <section className="media-panel" aria-label={isChinese ? "官方媒体参考" : "Official media references"}>
             <div>
-              <p className="eyebrow">Official Reference / 官方参考</p>
-              <h2>{activeMedia.titleZh}</h2>
-              <p>{activePersona.officialReferenceZh}</p>
+              <p className="eyebrow">{isChinese ? "官方参考" : "Official Reference"}</p>
+              <h2>{isChinese ? activeMedia.titleZh : activeMedia.title}</h2>
+              <p>{officialReference}</p>
             </div>
             <div className="media-card">
               <img src={activeMedia.localPoster || activeMedia.thumbnail} alt="" />
@@ -447,8 +580,8 @@ export function App() {
         <div className="message-stack" aria-live="polite">
           {messages.map((message, index) => (
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-              <span>{message.role === "assistant" ? activePersona.nameZh : "You"}</span>
-              <p>{message.content || (isChatting ? "..." : "")}</p>
+              <span>{message.role === "assistant" ? personaName : copy.chatPane.userName}</span>
+              <p>{message.content || (isChatting ? copy.chatPane.loading : "")}</p>
             </article>
           ))}
         </div>
@@ -459,13 +592,13 @@ export function App() {
           <textarea
             value={chatDraft}
             onChange={(event) => setChatDraft(event.target.value)}
-            placeholder={`${activePersona.chatPlaceholder} / ${activePersona.chatPlaceholderZh}`}
-            aria-label="Chat message"
+            placeholder={chatPlaceholder || copy.chatPane.placeholder}
+            aria-label={copy.nav.chat}
             rows={3}
           />
-          <button type="submit" disabled={isChatting} title="Send message">
+          <button type="submit" disabled={isChatting} title={copy.chatPane.sendTitle}>
             {isChatting ? <Loader2 className="spin" size={18} /> : <MessageSquareText size={18} />}
-            <span>Send</span>
+            <span>{copy.chatPane.send}</span>
           </button>
         </form>
       </section>
@@ -475,6 +608,8 @@ export function App() {
 
 function TaskRow({
   task,
+  classOptions,
+  copy,
   editDraft,
   isEditing,
   isPending,
@@ -485,22 +620,25 @@ function TaskRow({
   onSaveEdit,
   onStartEdit
 }) {
+  const classOption = classOptions.find((option) => option.value === task.class);
+  const editClassOption = classOptions.find((option) => option.value === editDraft.class);
+
   if (isEditing) {
     return (
       <article className={`task-row editing ${task.class}`}>
-        <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === editDraft.class)?.icon}</div>
+        <div className="task-class">{editClassOption?.icon}</div>
         <div className="task-edit-grid">
           <input
             value={editDraft.title}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, title: event.target.value }))}
-            aria-label="Edit task title"
+            aria-label={copy.edit.titleLabel}
           />
           <select
             value={editDraft.class}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, class: event.target.value }))}
-            aria-label="Edit task class"
+            aria-label={copy.edit.classLabel}
           >
-            {CLASS_OPTIONS.map((option) => (
+            {classOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -509,19 +647,19 @@ function TaskRow({
           <select
             value={editDraft.status}
             onChange={(event) => onChangeEditDraft((current) => ({ ...current, status: event.target.value }))}
-            aria-label="Edit task status"
+            aria-label={copy.edit.statusLabel}
           >
             {Object.entries(STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
-                {label}
+                {copy.statusLabels[value] || label}
               </option>
             ))}
           </select>
         </div>
-        <button className="row-action" onClick={() => onSaveEdit(task)} disabled={isPending} title="Save task">
+        <button className="row-action" onClick={() => onSaveEdit(task)} disabled={isPending} title={copy.edit.saveTitle}>
           <Check size={17} />
         </button>
-        <button className="row-action" onClick={onCancelEdit} disabled={isPending} title="Cancel edit">
+        <button className="row-action" onClick={onCancelEdit} disabled={isPending} title={copy.edit.cancelTitle}>
           <X size={17} />
         </button>
       </article>
@@ -530,20 +668,22 @@ function TaskRow({
 
   return (
     <article className={`task-row ${task.class} ${task.status === "kindled" ? "kindled" : ""}`}>
-      <div className="task-class">{CLASS_OPTIONS.find((option) => option.value === task.class)?.icon}</div>
+      <div className="task-class">{classOption?.icon}</div>
       <div className="task-body">
         <h3>{task.title}</h3>
         <p>
-          {CLASS_OPTIONS.find((option) => option.value === task.class)?.label} · {STATUS_LABELS[task.status]}
+          {classOption?.label}
+          {copy.taskPane.metaSeparator}
+          {copy.statusLabels[task.status] || STATUS_LABELS[task.status]}
         </p>
       </div>
-      <button className="row-action" onClick={() => onStartEdit(task)} disabled={isPending} title="Edit task">
+      <button className="row-action" onClick={() => onStartEdit(task)} disabled={isPending} title={copy.edit.editTitle}>
         <Edit3 size={16} />
       </button>
-      <button className="row-action" onClick={() => onKindle(task)} disabled={isPending} title="Toggle kindled">
+      <button className="row-action" onClick={() => onKindle(task)} disabled={isPending} title={copy.edit.kindleTitle}>
         <Check size={17} />
       </button>
-      <button className="row-action danger" onClick={() => onDelete(task)} disabled={isPending} title="Delete task">
+      <button className="row-action danger" onClick={() => onDelete(task)} disabled={isPending} title={copy.edit.deleteTitle}>
         <Trash2 size={17} />
       </button>
     </article>
