@@ -13,6 +13,8 @@ test("translations include Chinese Fire Keeper terminology", () => {
   assert.equal(TRANSLATIONS.zh.appTitle, "防火女 AI");
   assert.equal(TRANSLATIONS.zh.taskPane.title, "篝火账册");
   assert.equal(TRANSLATIONS.zh.taskPane.empty, "此誓约下没有任务。");
+  assert.equal(TRANSLATIONS.zh.lore.humanity, "人性");
+  assert.equal(TRANSLATIONS.zh.lore.estus, "原素瓶");
 });
 
 test("formatMessage replaces named placeholders", () => {

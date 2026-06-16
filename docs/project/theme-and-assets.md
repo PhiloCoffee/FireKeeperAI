@@ -1,40 +1,47 @@
-# Theme And Assets
+# 主题与资产
 
-The visual system uses Dark Souls inspired atmosphere: bonfire warmth, ash, gothic stone, muted metal, and Fire Keeper imagery.
+视觉系统使用《黑暗之魂》风格氛围：篝火暖光、灰烬、哥特石质、暗金属质感和防火女意象。
 
-![Fire Keeper AI desktop atmosphere](../assets/screenshots/firekeeper-desktop-ledger.png)
+![Fire Keeper AI 桌面氛围](../assets/screenshots/firekeeper-desktop-ledger.png)
 
-## UI Rules
+## UI 规则
 
-- Do not let art compete with text.
-- Use dark overlays on background images.
-- Hide or reduce character art on narrow screens.
-- Keep controls recognizable and compact.
-- Avoid adding decoration that shifts layout or blocks interaction.
+- 不要让美术盖过文字。
+- 背景图上必须使用暗色遮罩。
+- 在窄屏上隐藏或降低角色图存在感。
+- 控件要保持可识别、紧凑、可操作。
+- 不要添加会移动布局或阻挡交互的装饰。
 
-## Asset Folders
+## 资产目录
 
-Assets live under `apps/web/src/assets`:
+资产位于 `apps/web/src/assets`：
 
-- `scene`: environment/background images.
-- `char`: character-forward images.
-- `object`: props and bonfire imagery.
-- `brand`: store/header/capsule art.
-- `reference`: contact sheets and review-only selection aids.
-- `manifests`: source, credit, and usage notes.
+- `scene`：环境/背景图片。
+- `char`：角色主导图片。
+- `object`：道具、篝火等物件图片。
+- `brand`：商店/header/capsule 等品牌图。
+- `reference`：contact sheet 和仅用于审阅的选图辅助。
+- `manifests`：来源、授权和使用说明。
 
-## Current Integrated Assets
+文档截图位于：
 
-- Page background: `scene/local-screenshots/bg-anor-londo-skyline.jpg`
-- Task banner: `object/bonfire/bg-bonfire-ruins-cropped-banner.jpg`
-- Chat atmosphere: `char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg`
+- `docs/assets/screenshots`
 
-## Copyright Note
+## 当前集成资产
 
-Current Dark Souls and Fire Keeper assets are copyrighted game or fan content and are suitable only for local/private fan prototyping. Replace them with original or properly licensed art before public release.
+- 页面背景：`scene/local-screenshots/bg-anor-londo-skyline.jpg`
+- 任务 banner：`object/bonfire/bg-bonfire-ruins-cropped-banner.jpg`
+- 聊天气氛图：`char/fire-keeper/fire-keeper-art-rashed-alakroka.jpg`
+- 文档截图：`docs/assets/screenshots/firekeeper-desktop-ledger.png`
+- 中文界面截图：`docs/assets/screenshots/firekeeper-chinese-ui.png`
 
-## Relevant Files
+## 版权说明
+
+当前《黑暗之魂》和防火女视觉资产包含游戏或粉丝内容，只适合本地/私人 fan prototype。公开发布前应替换为原创或拥有合适授权的美术资产。
+
+## 相关文件
 
 - `apps/web/src/assets/README.md`
 - `apps/web/src/assets/manifests/`
 - `apps/web/src/styles.css`
+- `docs/assets/screenshots/`

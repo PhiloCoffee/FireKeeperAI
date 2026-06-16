@@ -24,7 +24,7 @@ export function buildTaskContext(tasks, language = "en") {
     .map((task) => {
       const taskClass = copy.classLabels[task.class] || task.class;
       const status = copy.statusLabels[task.status] || task.status;
-      return `- ${task.title} [${taskClass}, ${status}, priority ${task.priority}]`;
+      return `- ${task.title} [${taskClass}, ${status}, ${copy.priorityLabel} ${task.priority}]`;
     });
 
   if (!lines.length) {

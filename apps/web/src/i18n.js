@@ -137,10 +137,10 @@ export const TRANSLATIONS = {
     },
     lore: {
       ledgerLabel: "灵魂账本",
-      soulsEarned: "已取回 Souls",
-      soulsAtRisk: "风险中 Souls",
-      humanity: "Humanity",
-      estus: "Estus"
+      soulsEarned: "已取回灵魂",
+      soulsAtRisk: "风险中的灵魂",
+      humanity: "人性",
+      estus: "原素瓶"
     },
     bonfireWhispers: {
       ash: "灰烬还在等待目的。先记下一个任务，别让火光熄灭。",

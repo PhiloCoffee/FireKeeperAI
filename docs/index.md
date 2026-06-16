@@ -1,32 +1,36 @@
-# Fire Keeper AI Docs
+# Fire Keeper AI 文档
 
-Fire Keeper AI is a local-first planning assistant with a Dark Souls inspired interface, a task ledger, Claude-backed guidance, local SQLite storage, bilingual UI, and Markdown export.
+Fire Keeper AI 是一个本地优先的规划助手，使用《黑暗之魂》风格界面，包含任务账册、Claude 指引、本地 SQLite 存储、中英双语界面与 Markdown 导出。
 
-## App Screenshots
+## 程序截图
 
-These screenshots are captured from the local running app and stored as repository-local documentation assets.
+这些截图来自本地运行中的真实程序，并作为仓库内的文档资产保存。
 
-![Fire Keeper AI desktop task ledger](assets/screenshots/firekeeper-desktop-ledger.png)
+![Fire Keeper AI 桌面任务账册](assets/screenshots/firekeeper-desktop-ledger.png)
 
-![Fire Keeper AI Chinese interface](assets/screenshots/firekeeper-chinese-ui.png)
+![Fire Keeper AI 中文界面](assets/screenshots/firekeeper-chinese-ui.png)
 
-## Start Here
+## 从这里开始
 
-- [Project Overview](project/README.md)
-- [Task Ledger](project/task-ledger.md)
-- [AI Guidance](project/ai-guidance.md)
-- [Localization](project/localization.md)
-- [Theme And Assets](project/theme-and-assets.md)
-- [Storage And Export](project/storage-and-export.md)
-- [Testing And Quality](project/testing-and-quality.md)
-- [Documentation Site](project/docs-site.md)
-- [Dev Log And Changelog](project/dev-log.md)
+- [项目概览](project/README.md)
+- [任务账册](project/task-ledger.md)
+- [AI 指引](project/ai-guidance.md)
+- [本地化](project/localization.md)
+- [主题与资产](project/theme-and-assets.md)
+- [存储与导出](project/storage-and-export.md)
+- [测试与质量](project/testing-and-quality.md)
+- [文档站点](project/docs-site.md)
+- [开发日志与更新记录](project/dev-log.md)
 
-## Build The Docs
+## 构建文档
 
 ```bash
 npm run docs:build
 npm run docs:preview
 ```
 
-The static output is generated into `docs-site/` and can be deployed to GitHub Pages by the included workflow.
+静态输出会生成到 `docs-site/`，并可通过仓库里的 GitHub Pages workflow 发布。
+
+## English
+
+The English documentation is available at [English Docs](en/index.md).

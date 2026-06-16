@@ -1,26 +1,26 @@
-# Storage And Export
+# 存储与导出
 
-Fire Keeper AI stores runtime data locally and exports human-readable Markdown.
+Fire Keeper AI 把运行时数据保存在本地，并提供人类可读的 Markdown 导出。
 
-## Local Storage
+## 本地存储
 
-SQLite data lives under:
+SQLite 数据位于：
 
 ```text
 data/firekeeper.sqlite
 ```
 
-Generated exports live under:
+生成的导出文件位于：
 
 ```text
 data/exports/
 ```
 
-The database schema is initialized in `apps/api/src/db/database.js`.
+数据库 schema 在 `apps/api/src/db/database.js` 中初始化。
 
-## Task Persistence
+## 任务持久化
 
-Tasks are stored with:
+任务字段包括：
 
 - id
 - title
@@ -34,15 +34,17 @@ Tasks are stored with:
 - updatedAt
 - completedAt
 
-## Conversation Persistence
+## 对话持久化
 
-Conversation and message tables support stored chat history. The frontend currently starts with a local greeting and uses conversation id metadata after chat begins.
+conversations 和 messages 表用于保存对话历史。前端当前会先展示本地欢迎语，并在聊天开始后使用后端返回的 conversation id。
 
-## Markdown Export
+## Markdown 导出
 
-Markdown export should remain readable outside the app. It should include useful task state and localized headings/labels where the active language is provided.
+Markdown 导出应该在不运行应用时仍然可读。导出内容应包含有用的任务状态，并在提供当前语言时使用本地化标题和标签。
 
-## Relevant Files
+中文导出应使用术语表中的译名，例如“灵魂”“人性”“原素瓶”，避免在中文导出中混用不必要的英文术语。
+
+## 相关文件
 
 - `apps/api/src/db/database.js`
 - `apps/api/src/services/taskService.js`

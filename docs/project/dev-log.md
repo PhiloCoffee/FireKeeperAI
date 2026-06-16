@@ -1,163 +1,163 @@
-# Dev Log And Changelog
+# 开发日志与更新记录
 
-This log maps Fire Keeper AI's history from the existing git commits and keeps a sampled version path from `0.0.1` to `1.0.0`.
+这份日志根据现有 git 提交整理 Fire Keeper AI 的真实历史，并保留一条从 `0.0.1` 到 `1.0.0` 的样例版本路线。
 
-## How To Maintain This Log
+## 如何维护
 
-Use this format when adding a new milestone:
+新增里程碑时使用以下格式：
 
 ```text
-## x.y.z - YYYY-MM-DD - Milestone Name
+## x.y.z - YYYY-MM-DD - 里程碑名称
 
-- Source: commit hash, PR, or "working tree".
+- 来源：commit hash、PR，或 "working tree"。
 - Added:
 - Changed:
 - Fixed:
 - Docs:
 ```
 
-Rules:
+规则：
 
-- Use exact calendar dates from commits or release work.
-- Keep commit hashes when a milestone maps to git history.
-- Mark unreleased local work as `Working tree` until it is committed.
-- Prefer practical user-facing changes over internal noise.
-- Move planned items forward only when the implementation exists.
+- 使用提交或发布工作的准确日期。
+- 能映射到 git 历史时保留 commit hash。
+- 尚未提交的本地工作标记为 `Working tree`。
+- 优先记录用户可感知的变化，而不是内部噪音。
+- 只有实现已经存在时，才把计划项推进为版本项。
 
-## Timeline
+## 时间线
 
-| Date | Version | Source | Milestone |
+| 日期 | 版本 | 来源 | 里程碑 |
 | --- | --- | --- | --- |
-| 2025-02-01 | `0.0.1` | `43c9977` | Project concept, technical direction, and first Fire Keeper AI README seed. |
-| 2025-02-01 | `0.0.2` | `5ba4c7b` | Repository foundation with `.gitignore` and MIT license. |
-| 2025-02-01 | `0.0.3` | `7daaff6`, `c5355f5` | Main branch merge, Bonfire Lit proposal PDF, GPT screenshot, and README expansion. |
-| 2026-05-26 | `0.1.0` | `d26896b` | First runnable app scaffold with React/Vite frontend, Express backend, SQLite storage, Claude streaming, tasks, export, and tests. |
-| 2026-06-11 | `0.2.0` | `fa1755e` | Fire Keeper interaction pass with richer task logic, local assets, themed UI, and task logic tests. |
-| 2026-06-11 | `0.3.0` | `dd261b2` | Bilingual English/Simplified Chinese UI, localized backend prompts/export text, and i18n tests. |
-| 2026-06-15 | `0.4.0` | Working tree | Codebase hardening pass: task validation, SSE parsing, API error handling, docs cleanup, and broader tests. |
-| 2026-06-15 | `0.5.0` | Working tree | Static documentation site, GitHub Pages workflow, local app screenshots, dependency audit cleanup, and Vite 8 upgrade. |
-| Planned | `0.6.0` | Future | Task metadata polish: due dates, tags, richer filters, and edit UX. |
-| Planned | `0.7.0` | Future | AI-assisted task capture and task suggestion flow from chat. |
-| Planned | `0.8.0` | Future | Import/export maturity, backup restore, and conversation/task archive views. |
-| Planned | `0.9.0` | Future | Release candidate: accessibility pass, responsive QA, asset licensing cleanup, and deployment rehearsal. |
-| Planned | `1.0.0` | Future | Stable local-first release with documented install, verified workflows, and production-safe assets. |
+| 2025-02-01 | `0.0.1` | `43c9977` | 项目概念、技术方向和第一版 Fire Keeper AI README。 |
+| 2025-02-01 | `0.0.2` | `5ba4c7b` | 仓库基础，包含 `.gitignore` 与 MIT license。 |
+| 2025-02-01 | `0.0.3` | `7daaff6`, `c5355f5` | 主分支合并、Bonfire Lit proposal PDF、GPT 截图与 README 扩展。 |
+| 2026-05-26 | `0.1.0` | `d26896b` | 第一版可运行应用：React/Vite 前端、Express 后端、SQLite、Claude 流式对话、任务、导出和测试。 |
+| 2026-06-11 | `0.2.0` | `fa1755e` | 防火女交互与资产：更丰富的任务逻辑、本地资产、主题 UI 和任务逻辑测试。 |
+| 2026-06-11 | `0.3.0` | `dd261b2` | 中英双语界面、本地化后端 prompt/导出文本和 i18n 测试。 |
+| 2026-06-15 | `0.4.0` | Working tree | 代码库硬化：任务验证、SSE 解析、API 错误处理、文档清理和更完整的测试。 |
+| 2026-06-15 | `0.5.0` | Working tree | 静态文档站点、GitHub Pages workflow、本地程序截图、依赖 audit 清理和 Vite 8 升级。 |
+| 计划 | `0.6.0` | Future | 任务元数据完善：截止时间、标签、更丰富筛选和编辑体验。 |
+| 计划 | `0.7.0` | Future | AI 辅助任务捕获，以及从聊天中接受/编辑任务建议的流程。 |
+| 计划 | `0.8.0` | Future | 导入/导出成熟度、本地备份恢复、对话/任务归档视图。 |
+| 计划 | `0.9.0` | Future | Release candidate：无障碍、响应式 QA、资产授权清理和部署演练。 |
+| 计划 | `1.0.0` | Future | 稳定本地优先版本：新用户可根据文档安装、运行、使用、导出并理解应用。 |
 
-## Changelog
+## 更新记录
 
-## 0.5.0 - 2026-06-15 - Static Docs And Release Hygiene
+## 0.5.0 - 2026-06-15 - 静态文档与发布卫生
 
-- Source: Working tree.
+- 来源：Working tree。
 - Added:
-  - Static Markdown documentation build with `scripts/build-docs.mjs`.
-  - Local docs preview server with `scripts/preview-docs.mjs`.
-  - GitHub Pages deployment workflow under `.github/workflows/docs.yml`.
-  - App screenshots captured from the local running UI under `docs/assets/screenshots/`.
-  - Documentation Site page describing the docs stack and deployment path.
+  - 使用 `scripts/build-docs.mjs` 构建静态 Markdown 文档站。
+  - 使用 `scripts/preview-docs.mjs` 本地预览文档。
+  - 在 `.github/workflows/docs.yml` 中加入 GitHub Pages 部署 workflow。
+  - 从本地运行中的 UI 截图，并保存到 `docs/assets/screenshots/`。
+  - 新增文档站点说明页，记录 docs 技术栈与部署路径。
 - Changed:
-  - Frontend dev proxy can use `API_ORIGIN` to avoid local API port conflicts.
-  - Upgraded Vite to `^8.0.16`.
-  - Upgraded `concurrently` to `^10.0.3`.
+  - 前端 dev proxy 支持 `API_ORIGIN`，用于避开本地 API 端口冲突。
+  - Vite 升级到 `^8.0.16`。
+  - `concurrently` 升级到 `^10.0.3`。
 - Fixed:
-  - Cleared current npm audit findings after dependency upgrades.
+  - 依赖升级后清空当前 npm audit findings。
 - Docs:
-  - Linked screenshots from the docs home, task ledger, localization, and theme docs.
-  - Added docs build and preview commands to the project docs.
+  - 在文档首页、任务账册、本地化和主题文档中引用程序截图。
+  - 加入 docs build 和 preview 命令。
 
-## 0.4.0 - 2026-06-15 - Hardening And Documentation Cleanup
+## 0.4.0 - 2026-06-15 - 代码硬化与文档清理
 
-- Source: Working tree.
+- 来源：Working tree。
 - Added:
-  - Pure task validation helpers and tests.
-  - API client Server-Sent Event parser and tests.
-  - Project documentation pages under `docs/project/`.
+  - 纯任务验证 helper 与测试。
+  - API client Server-Sent Event parser 与测试。
+  - `docs/project/` 下的项目文档。
 - Changed:
-  - Task draft normalization now validates class and status values before UI use.
-  - Task counters ignore unknown class/status buckets instead of creating accidental UI keys.
-  - Task service normalizes titles, priorities, and tags before persistence.
-  - App mutation handlers now show user-facing errors for add, kindle, delete, export, and chat failures.
+  - 任务草稿规范化会在进入 UI 前验证 class 和 status。
+  - 任务计数会忽略未知 class/status bucket，避免意外 UI key。
+  - 任务服务会在持久化前规范化标题、优先级和标签。
+  - 新增任务、燃火、删除、导出和聊天失败时，界面会给用户明确错误提示。
 - Fixed:
-  - Blank task titles are rejected consistently by service and route code.
-  - Invalid JSON request bodies return `400` instead of a generic server error.
-  - Stale task marker in the oldest design note is now historical context.
+  - 空任务标题会在 service 和 route 层一致拒绝。
+  - 无效 JSON 请求体返回 `400`，不再是通用 server error。
+  - 最早设计记录里的过时任务标记已改成历史上下文。
 - Docs:
-  - README and project docs now match current task, export, testing, and asset behavior.
+  - README 和项目文档与当前任务、导出、测试和资产行为对齐。
 
-## 0.3.0 - 2026-06-11 - Bilingual Fire Keeper
+## 0.3.0 - 2026-06-11 - 双语防火女
 
-- Source: `dd261b2`.
+- 来源：`dd261b2`。
 - Added:
-  - English/Simplified Chinese frontend localization.
-  - Backend language copy for Claude prompts, task context, and Markdown export.
-  - i18n tests for frontend language behavior.
-  - Claude task context localization tests.
+  - 英文/简体中文前端本地化。
+  - 后端 Claude prompt、任务上下文和 Markdown 导出的语言文案。
+  - 前端语言行为测试。
+  - Claude 任务上下文本地化测试。
 - Changed:
-  - Frontend sends active language to chat and export APIs.
-  - README was expanded around language behavior and localized terminology.
+  - 前端会把当前语言发送给聊天和导出 API。
+  - README 扩展了语言行为与术语说明。
 - Docs:
-  - Captured Chinese terminology conventions such as Fire Keeper, Bonfire, and Covenant.
+  - 记录“防火女”“篝火”“誓约”等中文术语约定。
 
-## 0.2.0 - 2026-06-11 - Themed Interaction And Asset Pass
+## 0.2.0 - 2026-06-11 - 主题交互与资产
 
-- Source: `fa1755e`.
+- 来源：`fa1755e`。
 - Added:
-  - Dark Souls inspired local and sourced visual assets organized by role.
-  - Asset manifests for Steam, local screenshots, and Fire Keeper references.
-  - Fire Keeper interaction design note.
-  - Pure task logic helpers and task logic tests.
+  - 按用途组织的黑魂风格本地/来源视觉资产。
+  - Steam、本地截图和防火女参考图 asset manifest。
+  - 防火女交互设计记录。
+  - 纯任务逻辑 helper 和任务逻辑测试。
 - Changed:
-  - Main app UI gained stronger Fire Keeper atmosphere, task filters, and themed interaction styling.
-  - Task layout and CSS were expanded for a more polished two-pane app shell.
+  - 主应用获得更强的防火女氛围、任务筛选和主题化交互样式。
+  - 任务布局和 CSS 扩展为更完整的双栏应用外壳。
 - Docs:
-  - Added asset library README and interaction design documentation.
+  - 新增资产库 README 与交互设计文档。
 
-## 0.1.0 - 2026-05-26 - First Runnable App
+## 0.1.0 - 2026-05-26 - 第一版可运行应用
 
-- Source: `d26896b`.
+- 来源：`d26896b`。
 - Added:
-  - React/Vite frontend workspace.
-  - Express backend workspace.
-  - SQLite schema for tasks, conversations, and messages.
-  - Task routes and service layer.
-  - Claude streaming chat route and service layer.
-  - Markdown export route and service layer.
-  - Vite proxy setup and root workspace scripts.
-  - GUI planning design note.
+  - React/Vite 前端 workspace。
+  - Express 后端 workspace。
+  - tasks、conversations 和 messages 的 SQLite schema。
+  - 任务 routes 与 service layer。
+  - Claude 流式聊天 route 与 service layer。
+  - Markdown 导出 route 与 service layer。
+  - Vite proxy 和根 workspace scripts。
+  - GUI planning 设计记录。
 - Docs:
-  - README updated with setup and project direction.
+  - README 更新了 setup 和项目方向。
 
-## 0.0.3 - 2025-02-01 - Proposal And README Expansion
+## 0.0.3 - 2025-02-01 - Proposal 与 README 扩展
 
-- Source: `7daaff6`, `c5355f5`.
+- 来源：`7daaff6`, `c5355f5`。
 - Added:
-  - Bonfire Lit proposal PDF under design docs.
-  - GPT screenshot asset.
-  - Expanded README content around the original project soul.
+  - Bonfire Lit proposal PDF。
+  - GPT 截图资产。
+  - README 扩展了项目原始灵魂说明。
 - Changed:
-  - Merged initial branches into the main project line.
+  - 初始分支合并进主项目线。
 
-## 0.0.2 - 2025-02-01 - Repository Foundation
+## 0.0.2 - 2025-02-01 - 仓库基础
 
-- Source: `5ba4c7b`.
+- 来源：`5ba4c7b`。
 - Added:
-  - Initial `.gitignore`.
-  - MIT license.
+  - 初始 `.gitignore`。
+  - MIT license。
 
-## 0.0.1 - 2025-02-01 - Concept Seed
+## 0.0.1 - 2025-02-01 - 概念种子
 
-- Source: `43c9977`.
+- 来源：`43c9977`。
 - Added:
-  - First Fire Keeper AI technical direction note.
-  - Initial README.
-  - Early decisions around local-first storage, GUI technology, LLM options, and Dark Souls inspired visual direction.
+  - 第一版 Fire Keeper AI 技术方向记录。
+  - 初始 README。
+  - 围绕本地优先存储、GUI 技术、LLM 选择和黑魂风格视觉方向的早期决策。
 
-## Road To 1.0.0
+## 通往 1.0.0
 
-The path below is intentionally sampled rather than exhaustive. It gives the project clear release-shaped checkpoints without forcing every small change into a version.
+下面的路线是抽样式路线图，不追求穷尽。它用于给项目提供明确的 release checkpoint，而不是把每个小改动都塞进版本号。
 
-| Target | Theme | Exit Criteria |
+| 目标 | 主题 | 完成标准 |
 | --- | --- | --- |
-| `0.6.0` | Task Metadata | Due dates and tags are editable in the UI, covered by tests, and exported to Markdown. |
-| `0.7.0` | AI Task Flow | Chat can propose structured tasks, the user can accept/edit them, and task context remains localized. |
-| `0.8.0` | Data Portability | Markdown export is complemented by import/restore or archive flows for local-first durability. |
-| `0.9.0` | Release Candidate | Accessibility, responsive layout, error states, setup docs, and asset licensing have been reviewed. |
-| `1.0.0` | Stable Release | A fresh user can install, run, use, export, and understand the app from docs without developer help. |
+| `0.6.0` | 任务元数据 | 截止时间和标签可在 UI 中编辑，有测试覆盖，并能导出到 Markdown。 |
+| `0.7.0` | AI 任务流 | 聊天可以提出结构化任务，用户可以接受/编辑，任务上下文保持本地化。 |
+| `0.8.0` | 数据可携带性 | Markdown 导出补充导入/恢复或归档流程，强化本地优先耐久性。 |
+| `0.9.0` | 发布候选 | 无障碍、响应式布局、错误状态、setup 文档和资产授权完成审阅。 |
+| `1.0.0` | 稳定发布 | 新用户无需开发者帮助，就能按文档安装、运行、使用、导出并理解应用。 |

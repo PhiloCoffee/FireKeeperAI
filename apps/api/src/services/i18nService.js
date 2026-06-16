@@ -10,6 +10,7 @@ Do not over-roleplay. Keep responses concise unless the user asks for depth.
 When you identify tasks, return structured task suggestions when possible.`,
     taskContextEmpty: "Current open tasks: none.",
     taskContextTitle: "Current open tasks:",
+    priorityLabel: "priority",
     classLabels: {
       boss: "Boss",
       elite: "Elite",
@@ -45,6 +46,7 @@ When you identify tasks, return structured task suggestions when possible.`,
 识别出任务时，尽量给出结构化的任务建议。`,
     taskContextEmpty: "当前未燃尽的任务：无。",
     taskContextTitle: "当前未燃尽的任务：",
+    priorityLabel: "优先级",
     classLabels: {
       boss: "首领",
       elite: "精英",

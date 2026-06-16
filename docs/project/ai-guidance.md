@@ -1,10 +1,10 @@
-# AI Guidance
+# AI 指引
 
-The Guidance pane is the Claude-backed planning companion. It should help the user reason about tasks, break work down, and choose next actions without taking over the task ledger.
+指引面板是由 Claude 支持的规划助手。它应帮助用户拆解任务、判断优先级并选择下一步行动，而不是替代任务账册本身。
 
-## Architecture
+## 架构
 
-The browser calls the local API. The local API calls Claude.
+浏览器调用本地 API，本地 API 再调用 Claude。
 
 ```text
 React UI
@@ -14,28 +14,28 @@ React UI
   -> Anthropic Messages API
 ```
 
-The browser must not contain or use `ANTHROPIC_API_KEY`.
+浏览器端不得包含或直接使用 `ANTHROPIC_API_KEY`。
 
-## Streaming
+## 流式响应
 
-The frontend uses Server-Sent Events from `/api/chat/stream`.
+前端通过 `/api/chat/stream` 接收 Server-Sent Events。
 
-Expected event types:
+预期事件类型：
 
-- `meta`: conversation metadata, including conversation id.
-- `token`: streamed assistant text.
-- `done`: stream completion.
-- `error`: recoverable assistant/API error.
+- `meta`：对话元数据，包括 conversation id。
+- `token`：流式 assistant 文本。
+- `done`：流结束。
+- `error`：可恢复的 assistant/API 错误。
 
-## Task Context
+## 任务上下文
 
-When enabled, open tasks are sent as context to Claude. The backend is responsible for shaping that context so Claude sees useful task state without exposing unnecessary implementation details.
+启用后，未完成任务会作为上下文发送给 Claude。后端负责整理这些上下文，让 Claude 看到有用的任务状态，同时不暴露多余实现细节。
 
-## Language
+## 语言
 
-The frontend sends the active language to the backend. The backend should select system prompt and task labels that match the active language.
+前端会把当前语言发送给后端。后端应选择对应语言的 system prompt 和任务标签。中文上下文应使用术语表中的译名，例如“防火女”“篝火”“誓约”“灵魂”“人性”“原素瓶”。
 
-## Relevant Files
+## 相关文件
 
 - `apps/web/src/App.jsx`
 - `apps/web/src/api/client.js`

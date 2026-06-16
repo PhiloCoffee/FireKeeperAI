@@ -19,7 +19,7 @@ test("buildTaskContext localizes Chinese task metadata", () => {
   const context = buildTaskContext(tasks, "zh");
 
   assert.match(context, /当前未燃尽的任务：/);
-  assert.match(context, /Prepare release \[首领, 进行中, priority 1\]/);
+  assert.match(context, /Prepare release \[首领, 进行中, 优先级 1\]/);
   assert.doesNotMatch(context, /Archive notes/);
 });
 

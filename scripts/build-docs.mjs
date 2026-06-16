@@ -60,6 +60,14 @@ function pageOutputPath(markdownPath) {
   return path.join(outRoot, parsed.dir, `${parsed.name}.html`);
 }
 
+function pageLanguage(relativePath) {
+  return relativePath.startsWith("en/") ? "en" : "zh-CN";
+}
+
+function withoutLanguagePrefix(relativePath) {
+  return relativePath.startsWith("en/") ? relativePath.slice(3) : relativePath;
+}
+
 function titleFromMarkdown(source, fallback) {
   const heading = source.match(/^#\s+(.+)$/m);
   return heading ? heading[1].trim() : fallback;
@@ -92,24 +100,33 @@ function rewriteMarkdownLinks(html, markdownPath) {
   });
 }
 
-function navGroupTitle(relativePath) {
-  if (relativePath.startsWith("project/")) return "Project";
-  if (relativePath.startsWith("design/")) return "Design";
-  return "Start";
+function navGroupTitle(relativePath, language) {
+  const localPath = withoutLanguagePrefix(relativePath);
+
+  if (localPath.startsWith("project/")) {
+    return language === "zh-CN" ? "项目" : "Project";
+  }
+
+  if (localPath.startsWith("design/")) {
+    return language === "zh-CN" ? "设计记录" : "Design";
+  }
+
+  return language === "zh-CN" ? "开始" : "Start";
 }
 
 function renderSidebar(pages, currentPage) {
   const groups = new Map();
+  const languagePages = pages.filter((page) => page.language === currentPage.language);
 
-  for (const page of pages) {
-    const group = navGroupTitle(page.relative);
+  for (const page of languagePages) {
+    const group = navGroupTitle(page.relative, currentPage.language);
     groups.set(group, [...(groups.get(group) || []), page]);
   }
 
   return [...groups.entries()]
     .map(([group, groupPages]) => {
       const links = groupPages
-        .sort((a, b) => a.relative.localeCompare(b.relative))
+        .sort((a, b) => withoutLanguagePrefix(a.relative).localeCompare(withoutLanguagePrefix(b.relative)))
         .map((page) => {
           const active = page.outputPath === currentPage.outputPath ? " active" : "";
           return `<a class="nav-link${active}" href="${pageHref(currentPage.outputPath, page.outputPath)}">${page.title}</a>`;
@@ -121,12 +138,32 @@ function renderSidebar(pages, currentPage) {
     .join("\n");
 }
 
+function counterpartRelative(page) {
+  if (page.language === "en") {
+    return page.relative.slice(3);
+  }
+
+  return `en/${page.relative}`;
+}
+
+function renderLanguageSwitch(page, pages) {
+  const counterpart = pages.find((candidate) => candidate.relative === counterpartRelative(page));
+
+  if (!counterpart) {
+    return "";
+  }
+
+  const label = page.language === "zh-CN" ? "English" : "中文";
+  return `<a class="language-switch" href="${pageHref(page.outputPath, counterpart.outputPath)}">${label}</a>`;
+}
+
 function renderPage({ page, pages, content }) {
   const sidebar = renderSidebar(pages, page);
   const cssHref = pageHref(page.outputPath, path.join(outRoot, "assets", "site.css"));
+  const brand = page.language === "zh-CN" ? "Fire Keeper AI 文档" : "Fire Keeper AI Docs";
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${page.language}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -136,7 +173,8 @@ function renderPage({ page, pages, content }) {
   <body>
     <div class="site-shell">
       <aside class="site-sidebar">
-        <a class="site-brand" href="${pageHref(page.outputPath, path.join(outRoot, "index.html"))}">Fire Keeper AI</a>
+        <a class="site-brand" href="${pageHref(page.outputPath, path.join(outRoot, page.language === "en" ? "en/index.html" : "index.html"))}">${brand}</a>
+        ${renderLanguageSwitch(page, pages)}
         ${sidebar}
       </aside>
       <main class="site-content">
@@ -200,11 +238,21 @@ body {
 
 .site-brand {
   display: block;
-  margin-bottom: 28px;
+  margin-bottom: 10px;
   color: #ffe0b4;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.45rem;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.language-switch {
+  display: inline-flex;
+  margin-bottom: 28px;
+  border: 1px solid rgba(214, 170, 99, 0.22);
+  border-radius: 8px;
+  color: #ffb56e;
+  padding: 6px 10px;
   text-decoration: none;
 }
 
@@ -344,6 +392,7 @@ async function main() {
         filePath,
         outputPath: pageOutputPath(filePath),
         relative,
+        language: pageLanguage(relative),
         title: titleFromMarkdown(source, path.posix.basename(relative, ".md"))
       };
     })
